@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#a8201a">
+<meta name="description" content="Immobilien spielerisch lernen: Crashkurse, Lektionen, Rechen-Arena und Bossprüfungen.">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Immo-Akademie">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏠</text></svg>">
+<title>Immobilien-Akademie</title>
+<style>
+:root{color-scheme:light dark;--bg:#f4f5f2;--card:#fff;--text:#1d2125;--leise:#5f6770;--linie:#dde1e4;--akzent:#a8201a;--gut:#1e7a3c;--schlecht:#b3261e;--gold:#b8860b}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#15171a;--card:#1f2227;--text:#e9ebee;--leise:#a3aab4;--linie:#363b42;--akzent:#ff8a80;--gut:#5fd18a;--schlecht:#ff8a80;--gold:#f2c14e}}
+:root[data-theme="dark"]{--bg:#15171a;--card:#1f2227;--text:#e9ebee;--leise:#a3aab4;--linie:#363b42;--akzent:#ff8a80;--gut:#5fd18a;--schlecht:#ff8a80;--gold:#f2c14e}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:760px;margin:0 auto;padding:max(16px,env(safe-area-inset-top)) 16px max(40px,env(safe-area-inset-bottom))}
+h1{font-size:1.6rem;margin:0}h2{font-size:1.2rem;margin:24px 0 10px}
+p{margin:8px 0}
+.kopf{display:flex;flex-wrap:wrap;gap:10px 18px;align-items:center;justify-content:space-between;margin-bottom:14px}
+.chip{background:var(--card);border:1px solid var(--linie);border-radius:999px;padding:4px 12px;font-size:.92rem;white-space:nowrap}
+.balken{height:10px;background:var(--linie);border-radius:99px;overflow:hidden;margin:6px 0 2px}
+.balken i{display:block;height:100%;background:var(--akzent);border-radius:99px;transition:width .4s}
+.karte{background:var(--card);border:1px solid var(--linie);border-radius:14px;padding:16px;margin:12px 0}
+.karte.hinweis{border-color:color-mix(in srgb,var(--gold) 55%,var(--linie))}
+.welten{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.welt{background:var(--card);border:1px solid var(--linie);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:6px}
+.welt b{font-size:1.02rem}.klein{color:var(--leise);font-size:.88rem}
+button{font:inherit;cursor:pointer;border-radius:10px;border:1px solid var(--linie);background:var(--card);color:var(--text);padding:10px 14px;min-height:46px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+button.haupt{background:var(--akzent);border-color:var(--akzent);color:#fff;font-weight:600}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) button.haupt{color:#1d2125}}
+:root[data-theme="dark"] button.haupt{color:#1d2125}
+button:disabled{opacity:.55;cursor:default}
+button.tippknopf{border-style:dashed;border-color:color-mix(in srgb,var(--gold) 60%,var(--linie));min-height:40px;padding:8px 12px;font-size:.95rem}
+.reihe{display:flex;flex-wrap:wrap;gap:8px}
+.welt .reihe>button{flex:1 1 40%}
+.welt .reihe>button:first-child{flex-basis:100%}
+.welt .reihe>button.offen{border-color:color-mix(in srgb,var(--akzent) 55%,var(--linie));font-weight:600}
+.antworten{display:grid;gap:8px;margin-top:12px}
+.antworten button{text-align:left;padding:12px 14px;min-height:56px;font-size:1.02rem}
+.richtig{border-color:var(--gut)!important;background:color-mix(in srgb,var(--gut) 15%,var(--card))!important}
+.falsch{border-color:var(--schlecht)!important;background:color-mix(in srgb,var(--schlecht) 13%,var(--card))!important}
+.erkl{margin-top:12px;padding:12px;border-radius:10px;border-left:4px solid var(--akzent);background:var(--bg)}
+.tipp{margin-top:10px;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--gold) 13%,var(--card));border:1px solid color-mix(in srgb,var(--gold) 45%,var(--linie))}
+.formel{margin:12px 0;padding:12px 14px;border-radius:10px;background:color-mix(in srgb,var(--akzent) 8%,var(--card));border:1px solid color-mix(in srgb,var(--akzent) 30%,var(--linie));font-weight:600}
+.formel div+div{margin-top:6px;padding-top:6px;border-top:1px dashed color-mix(in srgb,var(--akzent) 30%,var(--linie))}
+.beispiel{margin:12px 0;padding:12px 14px;border-radius:10px;background:var(--bg);border-left:4px solid var(--gut)}
+.merke{margin:12px 0 0}
+.formelliste{margin:0;padding-left:20px}.formelliste li{margin:6px 0}
+input{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--linie);border-radius:10px;padding:10px 12px;width:200px;min-height:46px}
+.reihe input.breit{flex:1 1 220px}
+.gross{font-size:2.2rem;font-weight:700}.gold{color:var(--gold)}
+.abz{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
+.abz div{border:1px dashed var(--linie);border-radius:10px;padding:8px 10px;font-size:.9rem;color:var(--leise)}
+.abz div.hat{border-style:solid;color:var(--text)}
+@media (max-width:560px){
+ h1{font-size:1.3rem}h2{font-size:1.1rem}
+ .welten{grid-template-columns:1fr}
+ .reihe>button{flex:1 1 140px}
+ .reihe input{flex:1 1 100%;width:100%}
+ .karte{padding:14px}
+ .abz{grid-template-columns:1fr 1fr}
+}
+</style>
+</head>
+<body><main id="app"></main>
+<script>
+const APP_URL="https://metzger-loi.github.io/immo-akademie/";
+const WELTEN=[
+ {id:1,n:"Grundrechnung",i:"🧮",t:"Miete, Faktor, Rendite, Cashflow"},
+ {id:2,n:"Finanzierung",i:"🏦",t:"Kredit, Zinsbindung, Beleihung"},
+ {id:3,n:"Kaufen & Recht",i:"📜",t:"Notar, Grundbuch, Makler, Versteigerung"},
+ {id:4,n:"Vermieten",i:"🔑",t:"Mietrecht, Erhöhung, Kündigung"},
+ {id:5,n:"Steuern",i:"🧾",t:"AfA, 15-%-Grenze, GmbH"},
+ {id:6,n:"Bau & Energie",i:"🔥",t:"GModG, Heizung, Dämmung"},
+ {id:7,n:"Deals & Strategie",i:"♟️",t:"Off-Market, Verkäuferdarlehen, Partner"}];
+
+/* Crashkurs je Welt: t Titel, f Formel (Zeilen mit " · " getrennt), b Beispiel, m Merke */
+const KURS={
+1:[
+ {t:"Kaltmiete, Warmmiete, Ist und Soll",f:"Warmmiete = Kaltmiete + Betriebskosten + Heizkosten",b:"600 € kalt + 150 € Betriebskosten + 80 € Heizung = 830 € warm. Für alle Renditen zählen nur die 600 €.",m:"Die Nebenkosten reicht der Mieter nur durch, sie sind kein Gewinn. Ist-Miete ist, was heute wirklich bezahlt wird. Soll-Miete ist, was am Markt möglich wäre."},
+ {t:"Jahreskaltmiete",f:"Jahreskaltmiete = Monatskaltmiete × 12",b:"6 Wohnungen zu je 600 € = 3.600 € im Monat. 3.600 € × 12 = 43.200 € im Jahr.",m:"Fast jede Kennzahl startet mit dieser Zahl. Rechne mit der Ist-Miete, nicht mit dem, was der Makler für möglich hält."},
+ {t:"Kaufpreisfaktor",f:"Faktor = Kaufpreis ÷ Jahreskaltmiete",b:"Kaufpreis 864.000 €, Jahreskaltmiete 43.200 €: 864.000 ÷ 43.200 = 20. Du zahlst also 20 Jahresmieten.",m:"Je kleiner der Faktor, desto günstiger ist das Haus im Verhältnis zur Miete. Ein sehr kleiner Faktor hat oft einen Grund: schwache Lage, Leerstand oder Schäden."},
+ {t:"Bruttomietrendite",f:"Bruttorendite (%) = Jahreskaltmiete ÷ Kaufpreis × 100 · Kurzweg: Bruttorendite = 100 ÷ Faktor",b:"43.200 ÷ 864.000 × 100 = 5 %. Kurzweg: 100 ÷ 20 = 5 %. Faktor 25 ergibt 4 %, Faktor 12,5 ergibt 8 %.",m:"Brutto heißt: ohne Kaufnebenkosten und ohne laufende Kosten. Gut zum schnellen Vergleichen, aber zu optimistisch."},
+ {t:"Nettomietrendite",f:"Nettorendite (%) = (Jahreskaltmiete − nicht umlegbare Kosten) ÷ (Kaufpreis + Kaufnebenkosten) × 100",b:"Nicht umlegbare Kosten 6.000 € im Jahr, Nebenkosten 8 % = 69.120 €. (43.200 − 6.000) ÷ (864.000 + 69.120) × 100 = 37.200 ÷ 933.120 × 100 ≈ 4,0 %.",m:"Nicht umlegbar sind vor allem Verwaltung, Instandhaltung und Mietausfall. Die Grundsteuer zahlt dagegen der Mieter über die Betriebskosten."},
+ {t:"Cashflow",f:"Cashflow pro Monat = Kaltmiete − nicht umlegbare Kosten − Bankrate (Zins + Tilgung)",b:"3.600 € Miete − 500 € Kosten − 2.900 € Bankrate = 200 € bleiben jeden Monat übrig.",m:"Positiver Cashflow heißt: Das Haus bezahlt sich selbst. Die Tilgung baut zwar Vermögen auf, muss aber trotzdem jeden Monat bezahlt werden."},
+ {t:"Mietdeckung",f:"Mietdeckung = Kaltmiete ÷ (Bankrate + nicht umlegbare Kosten)",b:"3.600 ÷ (2.900 + 500) = 3.600 ÷ 3.400 ≈ 1,06. Die Miete deckt alles und ein wenig mehr.",m:"Über 1,0 trägt sich das Haus selbst, unter 1,0 zahlst du jeden Monat drauf. Plane einen Puffer ein, denn Leerstand und Reparaturen kommen sicher."},
+ {t:"Zahle die Ist-Miete, nicht das Potenzial",f:"Kaufpreis ≈ Ist-Jahresmiete × Zielfaktor",b:"Heute 43.200 € Miete, nach Sanierung wären 50.400 € möglich. Bei Faktor 20 zahlst du 43.200 × 20 = 864.000 €. Wer mit der möglichen Miete rechnet, zahlt 50.400 × 20 = 1.008.000 €, also 144.000 € mehr für Arbeit, die er selbst erst noch machen muss.",m:"Die Mietsteigerung nach deiner Arbeit ist dein Gewinn. Zahlst du sie beim Kauf mit, schenkst du sie dem Verkäufer."}],
+2:[
+ {t:"Kaufnebenkosten in Hessen",f:"Nebenkosten = Kaufpreis × (6 % Grunderwerbsteuer + ca. 2 % Notar und Grundbuch) · mit Makler zusätzlich 3,57 %",b:"Kaufpreis 500.000 €: 30.000 € Grunderwerbsteuer + 10.000 € Notar und Grundbuch = 40.000 € (8 %). Mit Makler kommen 17.850 € dazu, zusammen 57.850 € (11,57 %).",m:"Diese Kosten finanziert die Bank meistens nicht. Sie kommen aus deinem Eigenkapital."},
+ {t:"Monatsrate beim Annuitätendarlehen",f:"Monatsrate = Darlehen × (Zins + anfängliche Tilgung) ÷ 12",b:"400.000 € × (4 % + 2 %) ÷ 12 = 400.000 × 0,06 ÷ 12 = 2.000 € im Monat.",m:"Die Rate bleibt bis zum Ende der Zinsbindung gleich."},
+ {t:"Zinsanteil und Tilgungsanteil",f:"Zinsanteil = Restschuld × Zins ÷ 12 · Tilgungsanteil = Rate − Zinsanteil",b:"Erster Monat: 400.000 × 4 % ÷ 12 = 1.333 € Zins. Tilgung: 2.000 − 1.333 = 667 €. Weil die Restschuld sinkt, wird der Zinsanteil jeden Monat etwas kleiner und die Tilgung größer.",m:"Steuerlich zählen nur die Zinsen als Werbungskosten, die Tilgung nicht."},
+ {t:"Beleihungswert und Beleihungsauslauf",f:"Beleihungsauslauf (%) = Darlehen ÷ Beleihungswert × 100",b:"Kaufpreis 500.000 €, die Bank setzt den Beleihungswert vorsichtig auf 420.000 € an. Bei 400.000 € Darlehen: 400.000 ÷ 420.000 × 100 ≈ 95 %.",m:"Der Beleihungswert liegt meistens unter dem Marktwert. Je höher der Auslauf, desto höher meistens der Zins."},
+ {t:"Was eine Rate an Kredit kostet",f:"Weniger Kredit ≈ Monatsrate × 12 ÷ (Zins + Tilgung)",b:"Autorate 500 €: 500 × 12 = 6.000 € im Jahr. 6.000 ÷ 6 % = 100.000 € weniger Kredit für das Haus.",m:"Banken rechnen Mieteinnahmen in der Haushaltsrechnung nur mit etwa 60–80 % an, deine eigenen Raten dagegen voll."},
+ {t:"Eigenkapital",f:"Mindestens: Kaufnebenkosten · üblich: Kaufnebenkosten + 10–30 % des Kaufpreises",b:"Haus für 500.000 €: mindestens 40.000 € für die Nebenkosten. Mit 20 % Anteil am Kaufpreis sind es 40.000 + 100.000 = 140.000 €.",m:"Weniger Eigenkapital heißt meistens höherer Zins und strengere Prüfung. Finanzierungen ganz ohne Eigenkapital gibt es eher mit Zusatzsicherheiten und Erfahrung."},
+ {t:"Zinsbindung und Kündigung",f:"Kündbar ohne Vorfälligkeitsentschädigung: 10 Jahre nach der Auszahlung, mit 6 Monaten Frist (§ 489 BGB)",b:"Auszahlung im März 2030, 15 Jahre Zinsbindung: Ab März 2040 darfst du mit 6 Monaten Frist kündigen. Frühestens im September 2040 bist du raus.",m:"Lange Zinsbindung gibt Sicherheit, kurze ist oft günstiger. Danach gilt der Zins, den die Bank dann verlangt."},
+ {t:"Stresstest: höherer Anschlusszins",f:"Mehrkosten pro Monat ≈ Restschuld × Zinsanstieg ÷ 12",b:"Restschuld nach 10 Jahren 300.000 €, der Zins steigt von 4 % auf 6 %: 300.000 × 2 % ÷ 12 = 500 € mehr im Monat.",m:"Rechne jedes Haus auch mit höherem Zins durch. Trägt es sich dann nicht mehr, ist die Finanzierung zu knapp."},
+ {t:"Nachbeleihung",f:"Möglicher neuer Kredit ≈ neuer Beleihungswert × Beleihungsgrenze − Restschuld",b:"Nach der Sanierung setzt die Bank 600.000 € an und leiht zum Beispiel bis 80 %: 480.000 €. Bei 350.000 € Restschuld sind bis zu 130.000 € neues Darlehen möglich.",m:"Ein Darlehen ist kein Einkommen und deshalb steuerfrei. Die Zinsen sind aber nur abziehbar, wenn das Geld wieder in Vermietung fließt."}],
+3:[
+ {t:"Ohne Notar kein Kauf",f:"Ablauf: Finanzierungszusage · Notarentwurf (meist 2 Wochen vorher) · Beurkundung · Vormerkung · Kaufpreis · Eintragung",b:"Entwurf am 1. März, Notartermin frühestens um den 15. März. Den Kaufpreis zahlst du erst, wenn der Notar dir die Fälligkeit mitteilt.",m:"Ein Grundstückskaufvertrag ist nur wirksam, wenn ein Notar ihn beurkundet (§ 311b BGB). Als Verbraucher bekommst du den Entwurf in der Regel zwei Wochen vor dem Termin (§ 17 Abs. 2a BeurkG)."},
+ {t:"Wann gehört dir das Haus?",f:"Eigentum = Einigung (Auflassung) + Eintragung im Grundbuch (§§ 873, 925 BGB)",b:"Notartermin im April, Eintragung im Juli: Eigentümer bist du erst im Juli. Bis dahin schützt dich die Auflassungsvormerkung, die meistens wenige Wochen nach dem Termin eingetragen wird.",m:"Die Vormerkung verhindert, dass der Verkäufer das Haus zwischendurch an jemand anderen verkauft oder belastet."},
+ {t:"Das Grundbuch lesen",f:"Bestandsverzeichnis: das Grundstück · Abteilung I: Eigentümer · Abteilung II: Lasten und Beschränkungen · Abteilung III: Grundschulden und Hypotheken",b:"Steht in Abteilung II ein Wegerecht für den Nachbarn, darf er über dein Grundstück gehen. Ein Nießbrauch dort heißt: Jemand anderes darf das Haus nutzen oder die Miete bekommen.",m:"Prüfe Abteilung II immer vor dem Kauf. Lasten dort bleiben oft auch nach dem Kauf bestehen."},
+ {t:"Makler",f:"Provision = Kaufpreis × Satz (z. B. 3,57 % mit Umsatzsteuer)",b:"900.000 € × 3,57 % = 32.130 €. Beim Mehrfamilienhaus darf das ganz beim Käufer liegen, denn die hälftige Teilung (§ 656c BGB) gilt nur für Wohnung und Einfamilienhaus.",m:"Wer gewerblich als Makler arbeitet, braucht eine Erlaubnis nach § 34c GewO."},
+ {t:"Zwangsversteigerung",f:"1. Termin, Gebot unter 50 % des Verkehrswerts: kein Zuschlag (§ 85a ZVG) · unter 70 %: Berechtigte können die Versagung beantragen (§ 74a ZVG) · Sicherheit: 10 % des Verkehrswerts (§ 68 ZVG)",b:"Verkehrswert 400.000 €: Unter 200.000 € gibt es keinen Zuschlag. Unter 280.000 € kann zum Beispiel die Bank widersprechen. Als Sicherheit brauchst du 40.000 €, nicht in bar, sondern zum Beispiel vorher an die Gerichtskasse überwiesen.",m:"Ab dem zweiten Termin fallen diese Grenzen weg. Das Gutachten liest du vorher beim Amtsgericht."},
+ {t:"Spekulationsfrist",f:"Verkauf innerhalb von 10 Jahren: Gewinn = Verkaufspreis − (Anschaffungskosten − bereits abgezogene AfA) (§ 23 EStG)",b:"Kauf für 500.000 €, in 8 Jahren 64.000 € AfA abgezogen, Verkauf für 600.000 €: 600.000 − (500.000 − 64.000) = 164.000 € steuerpflichtiger Gewinn. Nach mehr als 10 Jahren wäre er steuerfrei.",m:"Die Frist zählt von Notarvertrag zu Notarvertrag."},
+ {t:"Gewerblicher Grundstückshandel",f:"Mehr als 3 Objekte innerhalb von etwa 5 Jahren nach dem Kauf verkauft: in der Regel gewerblich (Drei-Objekt-Grenze des BFH)",b:"Du kaufst 2030 vier Wohnungen und verkaufst alle bis 2034: Die Gewinne zählen als Gewerbe, mit Einkommensteuer und Gewerbesteuer.",m:"Wer langfristig vermietet und selten verkauft, bleibt privat."}],
+4:[
+ {t:"Kaution",f:"Kaution ≤ 3 × Nettokaltmiete, zahlbar in 3 Monatsraten (§ 551 BGB)",b:"Kaltmiete 700 €: höchstens 2.100 €. Die erste Rate ist zu Beginn des Mietverhältnisses fällig.",m:"Du musst die Kaution getrennt von deinem eigenen Geld anlegen."},
+ {t:"Mieterhöhung bis zur Vergleichsmiete",f:"Neue Miete ≤ ortsübliche Vergleichsmiete · und ≤ Miete vor 3 Jahren × 1,20 (in Gebieten mit Wohnungsnot × 1,15) (§ 558 BGB)",b:"Heute 600 €, Vergleichsmiete 750 €, Gebiet mit 15 % Kappungsgrenze: 600 × 1,15 = 690 €. Mehr geht in 3 Jahren nicht, auch wenn 750 € üblich wären.",m:"Die Miete muss vorher 15 Monate gleich geblieben sein. Erhöhungen wegen Modernisierung zählen bei der Kappungsgrenze nicht mit."},
+ {t:"Mietpreisbremse",f:"Miete bei Neuvermietung ≤ ortsübliche Vergleichsmiete × 1,10 (§ 556d BGB)",b:"Vergleichsmiete 10 €/m², Wohnung 70 m²: höchstens 11 €/m² × 70 = 770 € kalt.",m:"Ausnahmen: Wohnungen, die nach dem 1. Oktober 2014 erstmals genutzt und vermietet wurden, und die erste Vermietung nach umfassender Modernisierung (§ 556f BGB). War die Vormiete höher, darfst du sie weiter verlangen (§ 556e BGB)."},
+ {t:"Modernisierungsumlage",f:"Erhöhung pro Jahr = Modernisierungskosten × 8 % (§ 559 BGB) · Deckel: + 3 €/m² in 6 Jahren, bei Mieten unter 7 €/m² nur + 2 €/m²",b:"30.000 € für eine 70-m²-Wohnung: 30.000 × 8 % = 2.400 € im Jahr = 200 € im Monat = 2,86 €/m². Das liegt unter dem Deckel von 3 €/m².",m:"Den Teil, der ohnehin fällige Reparatur war, musst du vorher abziehen."},
+ {t:"Indexmiete",f:"Neue Miete = alte Miete × Index neu ÷ Index alt (§ 557b BGB)",b:"700 € × 126,4 ÷ 121,6 = 727,63 €.",m:"Die Miete muss jeweils mindestens ein Jahr gleich bleiben, die Erhöhung erklärst du in Textform. Im Gewerbemietvertrag ist eine Indexklausel nur bei langen Verträgen erlaubt, etwa ab 10 Jahren Bindung (§ 3 PrKG)."},
+ {t:"Kündigungsfristen",f:"Mieter: immer 3 Monate · Vermieter: 3 Monate, nach 5 Jahren 6, nach 8 Jahren 9 Monate (§ 573c BGB)",b:"Mieter wohnt seit 6 Jahren, du kündigst bis zum dritten Werktag im Januar: Das Mietverhältnis endet am 30. Juni.",m:"Der Vermieter braucht außerdem ein berechtigtes Interesse, zum Beispiel Eigenbedarf (§ 573 BGB)."},
+ {t:"Fristlose Kündigung wegen Mietschulden",f:"An zwei Terminen in Folge zusammen mehr als eine Monatsmiete offen · oder über längere Zeit insgesamt zwei Monatsmieten offen (§ 543 Abs. 2 Nr. 3, § 569 Abs. 3 BGB)",b:"Miete 800 €, im Mai und Juni kommen nur je 300 €: Rückstand 1.000 €, also mehr als eine Monatsmiete. Die fristlose Kündigung ist möglich.",m:"Zahlt der Mieter alles bis zwei Monate nach Zustellung der Räumungsklage nach, wird die fristlose Kündigung unwirksam. Deshalb kündigt man meistens zusätzlich ordentlich."},
+ {t:"Betriebskostenabrechnung",f:"Abrechnung spätestens 12 Monate nach Ende des Abrechnungszeitraums beim Mieter (§ 556 Abs. 3 BGB)",b:"Die Abrechnung für 2026 muss bis 31.12.2027 beim Mieter sein. Kommt sie am 2. Januar 2028, darfst du keine Nachzahlung mehr verlangen.",m:"Umlegbar sind zum Beispiel Grundsteuer, Wasser, Müll, Hausmeister und Gebäudeversicherung. Nicht umlegbar sind Verwaltung und Instandhaltung."}],
+5:[
+ {t:"Einkünfte aus Vermietung",f:"Einkünfte = Mieteinnahmen − Werbungskosten (Zinsen, AfA, Reparaturen, Verwaltung, Versicherung …)",b:"43.200 € Miete − 14.000 € Zinsen − 8.640 € AfA − 6.000 € sonstige Kosten = 14.560 € zu versteuern.",m:"Die Tilgung ist keine Werbungskost. Sie senkt die Steuer nicht, obwohl sie Geld kostet."},
+ {t:"Kaufpreisaufteilung",f:"AfA-Basis = (Kaufpreis + Nebenkosten) × Gebäudeanteil",b:"500.000 € + 40.000 € Nebenkosten = 540.000 €. Gebäudeanteil 80 %: 540.000 × 0,8 = 432.000 € AfA-Basis. Die 108.000 € für den Boden schreibst du nie ab.",m:"Schreib die Aufteilung in den Notarvertrag. Sonst nimmt das Finanzamt die Arbeitshilfe des BMF, die oft einen höheren Bodenanteil ergibt."},
+ {t:"AfA, die Abschreibung",f:"AfA pro Jahr = AfA-Basis × Satz · gebaut vor 1925: 2,5 % · 1925 bis 2022: 2 % · ab 2023: 3 % (§ 7 Abs. 4 EStG)",b:"432.000 € × 2 % = 8.640 € pro Jahr, 50 Jahre lang.",m:"Für neue Wohngebäude mit Baubeginn zwischen Oktober 2023 und September 2029 gibt es wahlweise 5 % vom Restwert (§ 7 Abs. 5a EStG). Eine kürzere Restnutzungsdauer lässt sich mit Gutachten nachweisen."},
+ {t:"Die 15-%-Grenze",f:"Grenze = Anschaffungskosten des Gebäudes × 15 %, ohne Umsatzsteuer, in den ersten 3 Jahren nach dem Kauf (§ 6 Abs. 1 Nr. 1a EStG)",b:"Gebäudeanteil 432.000 €: Grenze 64.800 € netto. Sanierst du in 3 Jahren für 70.000 € netto, werden alle Kosten zu Herstellungskosten und nur mit 2 % im Jahr abgeschrieben statt sofort abgezogen.",m:"Auch Schönheitsreparaturen zählen mit. Plane große Sanierungen nach dem Kauf deshalb genau."},
+ {t:"Verluste aus Vermietung",f:"Zu versteuerndes Einkommen = andere Einkünfte − Verlust aus Vermietung",b:"Gehalt nach Abzügen 40.000 €, Vermietung −5.000 € im Sanierungsjahr: Du versteuerst nur 35.000 €. Ohne andere Einkünfte wird der Verlust in spätere Jahre vorgetragen (§ 10d EStG).",m:"Das Finanzamt erkennt Verluste an, wenn das Haus auf lange Sicht einen Überschuss bringen soll."},
+ {t:"Denkmal und Sanierungsgebiet",f:"Sanierungskosten: 8 Jahre je 9 %, dann 4 Jahre je 7 % (§§ 7h, 7i EStG)",b:"100.000 € Sanierung: 9.000 € pro Jahr für 8 Jahre, dann 7.000 € pro Jahr für 4 Jahre. Nach 12 Jahren sind die 100.000 € komplett abgeschrieben.",m:"Die Bescheinigung der Gemeinde oder der Denkmalbehörde muss vorliegen. Stimme die Maßnahmen vor Beginn ab."},
+ {t:"GmbH und Holding",f:"Körperschaftsteuer: 15 % bis 2027, dann jedes Jahr 1 Punkt weniger, ab 2032 10 % (§ 23 KStG) · dazu 5,5 % Soli auf die Körperschaftsteuer",b:"50.000 € Gewinn im Jahr 2032: 5.000 € Körperschaftsteuer + 275 € Soli = 5.275 €. Mit der erweiterten Kürzung fällt praktisch keine Gewerbesteuer an.",m:"Gewinne aus einer Tochter-GmbH sind bei einer Holding-GmbH zu 95 % steuerfrei (§ 8b KStG). Privat bekommst du Geld aus der GmbH nur mit Ausschüttungssteuer, und ein Verkauf ist dort nie nach 10 Jahren steuerfrei."},
+ {t:"Miete für viele Jahre im Voraus",f:"Vorauszahlung für mehr als 5 Jahre: darf gleichmäßig verteilt werden (§ 11 Abs. 1 S. 3 EStG)",b:"Ein Mobilfunkbetreiber zahlt 40.000 € für 20 Jahre Dachmiete: Du darfst 2.000 € pro Jahr versteuern statt 40.000 € auf einmal.",m:"So rutschst du durch eine Einmalzahlung nicht in einen sehr hohen Steuersatz."}],
+6:[
+ {t:"U-Wert und Wärmeverlust",f:"Wärmeverlust (Watt) = U-Wert × Fläche × Temperaturunterschied",b:"Ungedämmte Wand: 100 m² × 1,4 W/(m²K) × 20 K = 2.800 W. Gedämmt auf 0,24: 100 × 0,24 × 20 = 480 W. Das ist über 80 % weniger Verlust.",m:"Je kleiner der U-Wert, desto besser dämmt das Bauteil."},
+ {t:"Heizkosten schätzen",f:"Heizkosten pro Jahr ≈ Energiekennwert (kWh/m²) × Wohnfläche × Preis pro kWh",b:"Energieausweis 160 kWh/m², 500 m² Wohnfläche, Gas 12 ct/kWh: 160 × 500 × 0,12 = 9.600 € im Jahr. Nach einer Sanierung auf 80 kWh/m² sind es 4.800 €.",m:"Die Heizkosten zahlt der Mieter. Ein schlechter Wert drückt aber die Miete, die du verlangen kannst, und du trägst einen Teil der CO₂-Kosten."},
+ {t:"Dämmpflichten",f:"Oberste Geschossdecke: U-Wert höchstens 0,24 W/(m²K) (§ 35 GModG) · erneuerte Außenwand ebenfalls höchstens 0,24",b:"Ungedämmte Decke zum kalten Dachboden: Mit rund 14–16 cm Dämmung der Wärmeleitstufe 035 erreichst du etwa 0,24.",m:"Das Gebäudemodernisierungsgesetz (GModG) hat im Juli 2026 das Gebäudeenergiegesetz (GEG) abgelöst."},
+ {t:"Neue Gas- oder Ölheizung",f:"Einbau nach dem 29.07.2026, Bio-Anteil an der Wärme: ab 2029 10 % · ab 2030 15 % · ab 2035 30 % · ab 2040 60 % (§ 43 GModG)",b:"Du baust 2027 eine neue Gasheizung ein: Ab 2029 muss ein Zehntel der Wärme aus Biomethan oder einem ähnlichen Brennstoff kommen, ab 2035 schon fast ein Drittel.",m:"Bio-Brennstoffe sind teurer. Rechne bei jeder neuen Gas- oder Ölheizung mit steigenden Kosten."},
+ {t:"Heizungsprüfung",f:"Häuser ab 6 Wohnungen, Heizung mit Wasser vor dem 01.10.2009 eingebaut: Prüfung und Optimierung bis 30.09.2027 (§ 60b GModG) · neuere Anlagen: innerhalb eines Jahres nach 15 Betriebsjahren",b:"Mehrfamilienhaus mit 8 Wohnungen, Gaskessel von 2005: Bis Ende September 2027 prüft ein Fachkundiger Heizkurve, Pumpe und Rohrdämmung und stellt die Anlage optimal ein.",m:"Die Prüfung kann auch durch einen hydraulischen Abgleich nachgewiesen werden."},
+ {t:"Hydraulischer Abgleich",f:"Ziel: jeder Heizkörper bekommt genau so viel Heizwasser, wie er braucht",b:"Vorher: oben im Haus kalt, unten überheizt, die Pumpe läuft auf höchster Stufe. Nachher: alle Räume gleich warm, die Vorlauftemperatur sinkt und die Heizung braucht weniger Energie.",m:"Er ist oft Voraussetzung für Förderung und wichtig, bevor man auf eine Wärmepumpe umsteigt."},
+ {t:"Luftdichtheit und Wärmebilder",f:"Blower-Door: Luftwechsel n50 = Leckluftstrom bei 50 Pa ÷ Gebäudevolumen (pro Stunde)",b:"1.200 m³/h Leckluft bei 800 m³ Volumen: 1.200 ÷ 800 = 1,5 pro Stunde. Neubauten müssen ohne Lüftungsanlage höchstens 3,0 schaffen, mit Lüftungsanlage 1,5.",m:"Wärmebilder (Thermografie) gelingen am besten bei Kälte, abends oder nachts und ohne Sonne auf der Fassade."},
+ {t:"Schadstoffe",f:"Asbest wurde bis zum Verbot 1993 verbaut · besonders Baujahre 1960 bis 1993 prüfen",b:"Floorflex-Platten, Fassadenplatten oder Fliesenkleber aus den 1970ern können Asbest enthalten. Eine Laborprobe kostet oft unter 100 €, eine Sanierung schnell mehrere Tausend Euro.",m:"Lass in älteren Häusern vor jeder Sanierung Proben nehmen, sonst drohen Baustopp und Gesundheitsschäden."}],
+7:[
+ {t:"Die Schnellprüfung",f:"Lage? · Faktor auf die Ist-Miete? · Cashflow auch im schlechten Fall? · Zustand? · Mietpotenzial? · Kommst du wieder raus?",b:"8 Wohnungen, Kaltmiete 5.000 € im Monat, Bankrate 3.750 €, nicht umlegbare Kosten 750 €: Cashflow 5.000 − 3.750 − 750 = 500 €. Steht eine Wohnung leer (−625 €), sind es −125 €. Also nachverhandeln oder mehr Eigenkapital einplanen.",m:"Das Haus muss von Anfang an einen Überschuss bringen, auch wenn ein Mieter ausfällt oder das Bauamt nein sagt."},
+ {t:"Hohe Rendite, hohes Risiko",f:"Faktor 10 = 10 % Bruttorendite",b:"Ein Haus für 400.000 € mit 40.000 € Jahresmiete klingt toll. Prüfe: Steht in der Gegend viel leer? Schrumpft der Ort? Gibt es einen Sanierungsstau?",m:"Warum verkauft jemand so günstig? Erst wenn du die Antwort kennst, kannst du entscheiden."},
+ {t:"Verkäuferdarlehen",f:"Kaufpreis + Nebenkosten = Bankdarlehen + Verkäuferdarlehen + Eigenkapital",b:"1,5 Mio. € + 120.000 € Nebenkosten = 1,62 Mio. €. Bank 1,2 Mio. € im ersten Rang, der Verkäufer stundet 250.000 € nachrangig, Eigenkapital 170.000 €.",m:"Das klappt eher bei großen Objekten und bei Verkäufern, die nicht alles sofort brauchen. Die Bank verlangt trotzdem den ersten Rang."},
+ {t:"Off-Market-Angebote",f:"Quellen: Makler-Kontakte · Hausverwaltungen · Handwerker · Banken · Erbengemeinschaften · Zwangsversteigerungen",b:"Ein Hausverwalter erzählt dir, dass eine Eigentümerin ihr Mehrfamilienhaus abgeben will. Du bekommst es, bevor es auf einem Portal steht und zehn andere mitbieten.",m:"Gute Angebote kommen über Beziehungen. Melde dich regelmäßig, antworte schnell und halte Wort."},
+ {t:"Mehrfamilienhaus statt einzelner Wohnungen",f:"Mietausfall, wenn ein Mieter nicht zahlt = 1 ÷ Anzahl der Wohnungen",b:"Eine Wohnung: Ein Mieter zahlt nicht, das sind 100 % Ausfall. Mehrfamilienhaus mit 8 Wohnungen: 1 ÷ 8 = 12,5 % Ausfall.",m:"Dazu kommen ein Notartermin, eine Finanzierung und ein Dach statt acht Eigentümerversammlungen."},
+ {t:"Vermittlung als Geschäft",f:"Provision = Kaufpreis × Satz",b:"Mehrfamilienhaus für 900.000 € bei 3 % netto: 27.000 €. Vier Abschlüsse im Jahr bringen 108.000 € Umsatz.",m:"Vermitteln braucht kein Eigenkapital, aber eine Erlaubnis nach § 34c GewO."},
+ {t:"Mit Partnern kaufen",f:"Für das Grundbuch: eingetragene GbR (§ 47 Abs. 2 GBO) · Der Vertrag regelt Anteile, Stimmen, Ausstieg, Todesfall und Vorkaufsrecht",b:"Drei Partner mit je einem Drittel: Will einer nach 6 Jahren aussteigen, übernehmen laut Vertrag die anderen seinen Anteil zum Gutachterwert, in Raten.",m:"Ohne Ausstiegsregel wird aus Partnern schnell Streit. Gesellschafter einer GbR haften persönlich (§ 721 BGB)."},
+ {t:"Kurse und Coachings prüfen",f:"Online-Kurs mit Lernkontrolle ohne ZFU-Zulassung: Der Vertrag kann nichtig sein (FernUSG, BGH III ZR 109/24)",b:"Ein Mentoring für 8.000 € mit Videos und Aufgaben, aber ohne ZFU-Zulassung: Du kannst dein Geld eventuell zurückverlangen.",m:"Suche vor dem Kauf die Zulassungsnummer bei der ZFU. Ob das Gesetz greift, hängt vom Aufbau des Kurses ab, zum Beispiel von viel Live-Unterricht."}]};
+
+/* Fragen: [Welt, Frage, [richtige Antwort, falsch, falsch, falsch], 0, Erklärung, Tipp] – Reihenfolge nie ändern, der Spielstand hängt am Index */
+const Q=[
+[1,"Wie berechnest du den Kaufpreisfaktor?",["Kaufpreis ÷ Jahreskaltmiete","Jahreskaltmiete ÷ Kaufpreis","Kaufpreis ÷ Monatskaltmiete","Kaufpreis × Rendite"],0,"Faktor = Kaufpreis geteilt durch die Jahreskaltmiete. Faktor 20 heißt: Du zahlst 20 Jahresmieten.","Der Faktor sagt, wie viele Jahresmieten du für das Haus bezahlst."],
+[1,"Welcher Bruttomietrendite entspricht der Faktor 20?",["5 %","2 %","20 %","10 %"],0,"Bruttorendite = 100 ÷ Faktor. 100 ÷ 20 = 5 %.","Teile 100 durch den Faktor."],
+[1,"Was rechnet die Nettomietrendite zusätzlich ein, die Bruttorendite aber nicht?",["Kaufnebenkosten und nicht umlegbare Kosten","Nur die Grundsteuer","Den Zins der Bank","Die Inflation"],0,"Netto rechnet mit Kaufpreis plus Nebenkosten und zieht Kosten ab, die du nicht auf die Mieter umlegen kannst.","Netto heißt: Was kostet der Kauf wirklich, und was bleibt von der Miete übrig?"],
+[1,"Was ist die Ist-Miete?",["Die Miete, die heute tatsächlich bezahlt wird","Die Miete laut Mietspiegel","Die Miete nach einer Sanierung","Die Warmmiete"],0,"Ist-Miete ist, was heute wirklich bezahlt wird. Soll-Miete ist, was am Markt möglich wäre.","„Ist“ steht für den Zustand heute, „Soll“ für das, was möglich wäre."],
+[1,"Mit welcher Miete solltest du den Kaufpreis berechnen?",["Mit der heutigen Ist-Miete","Mit der Miete, die nach einer Sanierung möglich wäre","Mit der Warmmiete","Mit der Miete, die der Makler für möglich hält"],0,"Die Mietsteigerung nach deiner Arbeit ist dein Gewinn. Wer das Potenzial beim Kauf mitbezahlt, schenkt ihn dem Verkäufer.","Wem soll der Gewinn aus deiner späteren Arbeit gehören?"],
+[1,"Wie berechnest du den monatlichen Cashflow vor Steuern?",["Kaltmiete − nicht umlegbare Kosten − Zins und Tilgung","Kaltmiete − Grundsteuer","Kaufpreis − Darlehen","Kaltmiete × 12"],0,"Das ist, was am Monatsende wirklich übrig bleibt, nachdem Bank und Kosten bezahlt sind.","Gesucht ist das Geld, das nach allen Zahlungen auf deinem Konto bleibt."],
+[1,"Was bedeutet eine Mietdeckung von 1,0?",["Die Miete deckt Kosten und Bankrate genau","Das Haus ist schuldenfrei","Die Rendite liegt bei 1 %","Die Miete ist zu niedrig"],0,"Mietdeckung = Kaltmiete ÷ (Bankrate + Kosten). Über 1,0 trägt sich das Haus selbst, darunter zahlst du jeden Monat drauf.","Mietdeckung = Kaltmiete ÷ (Bankrate + Kosten). Was heißt es, wenn genau 1 herauskommt?"],
+[1,"Welche Kosten darf der Vermieter NICHT als Betriebskosten auf die Mieter umlegen?",["Verwaltung und Instandhaltung","Grundsteuer","Müllabfuhr","Hausmeister"],0,"Verwaltungs- und Instandhaltungskosten sind keine Betriebskosten (§ 1 Abs. 2 BetrKV). Die Grundsteuer ist umlegbar.","Laufende Kosten des Hauses darf er umlegen, Kosten für Reparaturen und Organisation nicht."],
+[1,"Woraus besteht die Warmmiete?",["Kaltmiete plus Betriebs- und Heizkosten","Kaltmiete minus Heizkosten","Nur aus den Heizkosten","Kaltmiete mal 1,2"],0,"Kalt ist die reine Nutzung, warm sind alle Nebenkosten dabei.","Warm heißt: Alles ist dabei, auch die Heizung."],
+[2,"Was bleibt bei einem Annuitätendarlehen während der Zinsbindung gleich?",["Die monatliche Rate","Der Zinsanteil","Der Tilgungsanteil","Die Restschuld"],0,"Die Rate bleibt gleich. Der Zinsanteil sinkt, der Tilgungsanteil steigt jedes Jahr.","Annuität heißt „gleichbleibende Jahreszahlung“."],
+[2,"Wann darfst du ein Darlehen mit langer Zinsbindung ohne Vorfälligkeitsentschädigung kündigen?",["10 Jahre nach der Auszahlung, mit 6 Monaten Frist","Jederzeit","Nie","Nach 5 Jahren"],0,"§ 489 Abs. 1 Nr. 2 BGB: nach 10 Jahren mit 6 Monaten Kündigungsfrist, auch wenn die Zinsbindung länger läuft.","Das Gesetz schützt dich vor sehr langen Bindungen. Die Grenze ist eine runde Zahl an Jahren."],
+[2,"Wie hoch ist der Beleihungswert der Bank meistens im Vergleich zum Marktwert?",["Niedriger","Höher","Genau gleich","Er hängt nur vom Kaufpreis ab"],0,"Die Bank rechnet nach der BelWertV mit dem dauerhaft erzielbaren Wert und zieht Sicherheitsabschläge ab.","Die Bank will auch im schlechten Fall ihr Geld zurück. Rechnet sie vorsichtig oder optimistisch?"],
+[2,"Wie hoch ist die Grunderwerbsteuer in Hessen?",["6 %","3,5 %","5 %","6,5 %"],0,"Hessen: 6 %. Dazu kommen rund 2 % für Notar und Grundbuch, eventuell Makler.","Es ist eine glatte Zahl ohne Komma, höher als in Bayern mit 3,5 %."],
+[2,"Was musst du bei einer Kapitalanlage meistens mindestens aus Eigenkapital bezahlen?",["Die Kaufnebenkosten","Gar nichts","Den ganzen Kaufpreis","Nur die erste Rate"],0,"Oft verlangen Banken sogar 20–30 % des Kaufpreises plus Nebenkosten. Ganz ohne Eigenkapital geht es eher mit Zusatzsicherheiten und Erfahrung.","Was finanziert die Bank fast nie, weil dafür kein Wert im Haus steht?"],
+[2,"Musst du Geld aus einer Nachbeleihung als Einkommen versteuern?",["Nein, ein Darlehen ist kein Einkommen","Ja, immer","Nur über 100.000 €","Nur in Hessen"],0,"Darum heißt es „steuerfrei“. Aber: Die Zinsen sind nur abziehbar, wenn das Geld wieder in Vermietung fließt.","Das Geld musst du der Bank zurückzahlen. Ist es dann ein Gewinn?"],
+[2,"Du zahlst 1.000 € Autorate im Monat. Um wie viel sinkt dadurch ungefähr der Kredit, den du für ein Haus bekommst?",["Um rund 190.000 €","Um rund 12.000 €","Gar nicht","Um rund 1 Mio. €"],0,"12.000 € im Jahr ÷ 6,3 % (Zins + Tilgung) ≈ 190.000 € weniger Darlehen. Darum: keine Rate vor dem Haus.","Jahresrate ÷ (Zins + Tilgung). Rechne mit etwa 6,3 %."],
+[2,"Mit wie viel Prozent der Mieteinnahmen rechnen Banken in der Haushaltsrechnung meistens?",["60–80 %","100–120 %","10 %","0 %, Mieten zählen nicht"],0,"Leerstand und Kosten werden vorsichtig abgezogen.","Die Bank zieht Leerstand und Kosten ab, lässt die Miete aber nicht ganz weg."],
+[2,"Was bringt dir ein tilgungsfreies erstes Jahr?",["Eine niedrigere Rate, aber die Schuld sinkt in dem Jahr nicht","Insgesamt weniger Zinsen","Einen Steuerrabatt","Einen höheren Beleihungswert"],0,"Mehr Cashflow am Anfang, aber du zahlst länger und insgesamt mehr Zinsen.","Ohne Tilgung zahlst du nur Zinsen. Was passiert dann mit der Restschuld?"],
+[2,"Zwischen welchen Werten liegt der Mindest-Kapitalisierungszins der BelWertV für Wohnhäuser?",["3,5–5,5 %","0,5–1 %","8–10 %","15–20 %"],0,"§ 12 Abs. 4 BelWertV: Rendite 30-jähriger Bundesanleihen plus 3 Punkte, begrenzt auf 3,5–5,5 %. Bei Gewerbe 4,5–6,5 %. Je höher der Zins, desto niedriger der Beleihungswert.","Für Gewerbe gilt dieselbe Spanne plus einen Punkt: 4,5–6,5 %."],
+[3,"Welche Form braucht ein Grundstückskaufvertrag?",["Notarielle Beurkundung","Schriftform reicht","Mündlich reicht","Textform per E-Mail"],0,"§ 311b BGB. Ohne Notar ist der Vertrag unwirksam.","Bei so großen Werten will der Gesetzgeber eine neutrale Amtsperson dabei haben."],
+[3,"Ab wann bist du rechtlich Eigentümer einer Immobilie?",["Mit der Eintragung im Grundbuch","Mit der Unterschrift beim Notar","Mit der Schlüsselübergabe","Mit der ersten Mieteinnahme"],0,"Einigung (Auflassung) plus Eintragung, §§ 873, 925 BGB.","Beim Grundstück zählt das öffentliche Register."],
+[3,"Was schützt dich als Käufer zwischen Notartermin und Eintragung im Grundbuch?",["Die Auflassungsvormerkung","Die Grundschuld","Der Energieausweis","Die Maklercourtage"],0,"Sie blockiert spätere Verfügungen des Verkäufers über das Grundstück.","Sie wird schon vorab ins Grundbuch eingetragen und merkt deinen Anspruch vor."],
+[3,"Was steht in Abteilung III des Grundbuchs?",["Grundschulden und Hypotheken","Der Eigentümer","Wegerechte und Nießbrauch","Die Wohnfläche"],0,"Abteilung I Eigentümer, Abteilung II Lasten und Beschränkungen, Abteilung III Grundpfandrechte.","Abteilung I zeigt den Eigentümer, Abteilung II Lasten wie Wegerechte."],
+[3,"Muss die Maklerprovision beim Kauf eines Mehrfamilienhauses zwischen Käufer und Verkäufer geteilt werden?",["Nein, die Pflicht zur Teilung gilt nur für Wohnung und Einfamilienhaus","Ja, immer","Nur in Hessen","Nur bei Neubauten"],0,"§ 656c BGB gilt für Wohnungen und Einfamilienhäuser, wenn ein Verbraucher kauft. Beim Mehrfamilienhaus kann die Provision ganz beim Käufer liegen.","Das Gesetz schützt Familien, die selbst einziehen wollen."],
+[3,"Was brauchst du, um gewerblich als Immobilienmakler zu arbeiten?",["Eine Erlaubnis nach § 34c GewO","Ein abgeschlossenes Studium","Nur eine Gewerbeanmeldung","Gar nichts"],0,"Versagt wird die Erlaubnis bei Unzuverlässigkeit oder ungeordneten Vermögensverhältnissen.","Es ist eine behördliche Erlaubnis, die man bei Unzuverlässigkeit nicht bekommt."],
+[3,"Zwangsversteigerung, erster Termin: Unter welcher Grenze wird der Zuschlag automatisch versagt?",["Unter 50 % des Verkehrswerts","Unter 70 %","Unter 30 %","Unter 90 %"],0,"5/10-Grenze (§ 85a ZVG). Unter 7/10 kann ein Berechtigter die Versagung beantragen (§ 74a ZVG).","Es gibt eine 5/10- und eine 7/10-Grenze. Automatisch greift die niedrigere."],
+[3,"Nach wie vielen Jahren kannst du eine privat vermietete Immobilie steuerfrei verkaufen?",["Nach 10 Jahren","Nach 3 Jahren","Nach 5 Jahren","Nie"],0,"§ 23 EStG: Liegen zwischen Kauf und Verkauf mehr als 10 Jahre, ist der Gewinn privat steuerfrei.","Die Frist heißt auch Spekulationsfrist und ist zweistellig."],
+[3,"Ab wann droht dir in der Regel gewerblicher Grundstückshandel?",["Wenn du mehr als 3 Objekte innerhalb von 5 Jahren nach dem Kauf verkaufst","Ab dem ersten Kauf","Ab 10 Wohnungen im Bestand","Ab 1 Mio. € Kaufpreis"],0,"Drei-Objekt-Grenze des BFH. Dann zählen die Gewinne als Gewerbe, mit Einkommen- und Gewerbesteuer.","Es geht ums Verkaufen, nicht ums Kaufen oder Halten."],
+[4,"Wie hoch darf die Mietkaution höchstens sein?",["3 Nettokaltmieten","6 Monatsmieten","1 Warmmiete","Unbegrenzt"],0,"§ 551 BGB. Der Mieter darf sie in drei Monatsraten zahlen.","Der Mieter darf sie in so vielen Monatsraten zahlen, wie sie Mieten hoch ist, und das sind nicht viele."],
+[4,"Um wie viel darf die Miete innerhalb von 3 Jahren höchstens steigen (Kappungsgrenze)?",["20 %, in angespannten Gebieten 15 %","50 %","5 %","Gar nicht"],0,"§ 558 Abs. 3 BGB, und nie über die ortsübliche Vergleichsmiete.","Es gibt zwei Werte: einen normalen und einen niedrigeren für Gebiete mit Wohnungsnot."],
+[4,"Wie hoch darf die Miete bei einer Neuvermietung in einem Gebiet mit Mietpreisbremse höchstens sein?",["10 % über der ortsüblichen Vergleichsmiete","Beliebig hoch","Genau die Vergleichsmiete","20 % über der Vergleichsmiete"],0,"§ 556d BGB. Ausgenommen sind u. a. Wohnungen, die nach dem 1. Oktober 2014 erstmals genutzt und vermietet wurden.","Ein kleiner Aufschlag auf die Vergleichsmiete ist erlaubt."],
+[4,"Woran ist eine Indexmiete bei Wohnungen gekoppelt?",["An den Verbraucherpreisindex, Erhöhung höchstens einmal im Jahr","An die Bauzinsen","An den Mietspiegel, monatlich","An den Ölpreis"],0,"§ 557b BGB: Die Miete folgt der Inflation, muss aber jeweils ein Jahr gleich bleiben. Die Erhöhung erklärst du in Textform.","Index heißt hier: Die Miete folgt den allgemeinen Lebenshaltungskosten."],
+[4,"Welchen Anteil der Modernisierungskosten darfst du pro Jahr auf die Miete umlegen?",["8 %","11 %","2 %","20 %"],0,"§ 559 BGB, gedeckelt auf 3 €/m² in 6 Jahren (2 € bei Mieten unter 7 €/m²).","Früher waren es 11 %, seit 2019 ist es weniger."],
+[4,"Welche Kündigungsfrist hat der Vermieter nach 6 Jahren Mietdauer?",["6 Monate","3 Monate","9 Monate","4 Wochen"],0,"§ 573c BGB: 3 Monate, nach 5 Jahren 6, nach 8 Jahren 9 Monate.","Grundfrist 3 Monate. Nach 5 und nach 8 Jahren kommen jeweils 3 Monate dazu."],
+[4,"Ab welchem Mietrückstand darfst du einem Wohnungsmieter fristlos kündigen?",["Wenn insgesamt zwei Monatsmieten offen sind","Nach einer Woche Verzug","Ab einer halben Monatsmiete","Ab zehn Monatsmieten"],0,"§ 543 Abs. 2 Nr. 3 BGB. Schon früher geht es, wenn an zwei Terminen in Folge zusammen mehr als eine Monatsmiete offen ist.","Es braucht mehr als einen einzelnen Monat, aber kein halbes Jahr."],
+[4,"Bis wann muss die Betriebskostenabrechnung beim Mieter sein?",["12 Monate nach Ende des Abrechnungszeitraums","3 Monate danach","5 Jahre danach","Es gibt keine Frist"],0,"§ 556 Abs. 3 BGB. Danach darfst du keine Nachzahlung mehr verlangen.","Kommt sie zu spät, verlierst du die Nachzahlung. Die Frist ist kürzer als zwei Jahre."],
+[4,"Wann darfst du in einem Gewerbemietvertrag eine Indexmiete vereinbaren?",["Bei langen Verträgen, etwa ab 10 Jahren Laufzeit","Immer","Nie","Nur mit Behörden als Mieter"],0,"§ 3 PrKG (Preisklauselgesetz): nur bei langfristigen Verträgen.","Das Preisklauselgesetz erlaubt das nur, wenn sich beide lange binden."],
+[5,"Wie viel Prozent darfst du bei einem 1980 gebauten Mietshaus jedes Jahr abschreiben (AfA)?",["2 %","2,5 %","3 %","5 %"],0,"§ 7 Abs. 4 EStG: vor 1925 gebaut 2,5 %, ab 2023 fertiggestellt 3 %, dazwischen 2 %.","2,5 % gibt es nur für sehr alte Häuser, 3 % nur für neue."],
+[5,"Was besagt die 15-%-Grenze?",["Sanierst du in den ersten 3 Jahren für mehr als 15 % des Gebäudewerts, wird nur abgeschrieben statt sofort abgezogen","Die Miete darf höchstens um 15 % steigen","Du brauchst mindestens 15 % Eigenkapital","Makler dürfen höchstens 15 % verlangen"],0,"Anschaffungsnahe Herstellungskosten (§ 6 Abs. 1 Nr. 1a EStG), gerechnet ohne Umsatzsteuer.","Es geht um Sanierungskosten kurz nach dem Kauf und um die Steuer."],
+[5,"Warum ist die Aufteilung des Kaufpreises in Boden und Gebäude wichtig?",["Nur der Gebäudeanteil wird abgeschrieben","Sie bestimmt die Grundsteuer","Sie bestimmt die Maklerprovision","Sie ist unwichtig"],0,"Grund und Boden nutzt sich nicht ab. Je höher der Gebäudeanteil, desto mehr AfA.","Was nutzt sich im Lauf der Jahre ab, und was nicht?"],
+[5,"Was passiert steuerlich mit Verlusten aus Vermietung?",["Du verrechnest sie mit anderen Einkünften oder trägst sie vor","Sie verfallen","Nur eine GmbH kann sie nutzen","Sie sind verboten"],0,"Verluste mindern dein übriges Einkommen. Reicht das nicht, werden sie in spätere Jahre vorgetragen (§ 10d EStG).","Das Finanzamt rechnet alle Einkunftsarten zusammen."],
+[5,"Wie hoch ist der Körperschaftsteuersatz ab 2032?",["10 %","15 %","25 %","0 %"],0,"§ 23 KStG: 15 % bis 2027, dann jedes Jahr 1 Punkt weniger.","Bis 2027 sind es 15 %. Ab 2028 sinkt der Satz jedes Jahr um einen Punkt."],
+[5,"Welchen Vorteil bringt die erweiterte Kürzung einer GmbH, die nur eigene Immobilien vermietet?",["Praktisch keine Gewerbesteuer","Keine Körperschaftsteuer","Keine Grunderwerbsteuer","Doppelte AfA"],0,"§ 9 Nr. 1 S. 2 GewStG. Sie gilt nicht, wenn die GmbH mit Immobilien handelt.","Die Kürzung betrifft die Steuer, die an die Gemeinde geht."],
+[5,"Wie schreibst du Sanierungskosten an einem Denkmal oder im Sanierungsgebiet ab?",["8 Jahre je 9 %, dann 4 Jahre je 7 %","1 % im Jahr","Sofort zu 100 %","Gar nicht"],0,"§§ 7h, 7i EStG. Die Bescheinigung der Behörde muss vorliegen, die Maßnahmen vorher abstimmen.","Nach 12 Jahren sind die Kosten komplett abgeschrieben."],
+[5,"Deine Holding-GmbH verkauft ihre Anteile an einer Tochter-GmbH mit Gewinn. Wie viel des Gewinns ist steuerfrei?",["Rund 95 %","0 %","50 %","100 %"],0,"§ 8b KStG: Der Gewinn ist steuerfrei, aber 5 % gelten als nicht abziehbare Ausgaben und werden versteuert.","Fast alles ist frei, ein kleiner Rest wird pauschal versteuert."],
+[5,"Ein Mobilfunkbetreiber zahlt die Dachmiete für 20 Jahre im Voraus. Wie versteuerst du das?",["Du darfst die Einnahme gleichmäßig auf die 20 Jahre verteilen","Sie ist komplett steuerfrei","Es fällt nur Umsatzsteuer an","Sie zählt nicht als Einnahme"],0,"§ 11 Abs. 1 S. 3 EStG gilt bei Vorauszahlungen für mehr als 5 Jahre.","Das Gesetz will verhindern, dass dich eine Einmalzahlung in einen sehr hohen Steuersatz schiebt."],
+[6,"Wie heißt das Gebäudeenergiegesetz (GEG) seit Juli 2026?",["Gebäudemodernisierungsgesetz (GModG)","Heizungsgesetz 2.0","Energieeinsparverordnung (EnEV)","Wohnungseigentumsgesetz (WEG)"],0,"Die 65-%-Regel steht dort nicht mehr. Neu ist eine Bio-Quote für neue Gas- und Ölheizungen.","Der neue Name betont die Modernisierung von Gebäuden."],
+[6,"Bis wann muss eine Heizung, die vor Oktober 2009 eingebaut wurde, in einem Haus mit mindestens 6 Wohnungen geprüft sein?",["Bis 30.09.2027","Bis 2040","Sofort","Gar nicht"],0,"§ 60b GModG: Heizungsprüfung und Optimierung. Fachkundig sind u. a. Energieberater auf der Expertenliste.","Die Frist läuft bald ab, noch vor 2028."],
+[6,"Welchen U-Wert darf eine nachträglich gedämmte oberste Geschossdecke höchstens haben?",["0,24 W/(m²K)","1,4 W/(m²K)","0,05 W/(m²K)","3,0 W/(m²K)"],0,"§ 35 GModG. Für erneuerte Außenwände gilt ebenfalls 0,24.","Je kleiner der U-Wert, desto besser. 1,4 hat eine ungedämmte Wand, 0,05 schafft kaum ein Bauteil."],
+[6,"Wie viel Prozent der Wärme muss eine neu eingebaute Gas- oder Ölheizung ab 2029 aus Bio-Brennstoff erzeugen?",["Mindestens 10 %","0 %","50 %","100 %"],0,"§ 43 GModG: 2030 15 %, 2035 30 %, 2040 60 %.","Die Quote startet klein und steigt bis 2040 auf 60 %."],
+[6,"Was misst ein Blower-Door-Test?",["Die Luftdichtheit des Gebäudes","Die Heizlast","Den Schallschutz","Die Statik"],0,"Ein Ventilator erzeugt Unterdruck und zeigt Leckagen. Wichtig für Energieausweis und Förderung.","Ein Ventilator erzeugt Unterdruck im Haus. Was lässt sich dann messen?"],
+[6,"Wann gelingen Wärmebilder (Thermografie) einer Fassade am besten?",["Bei Kälte, abends oder nachts","Im Hochsommer mittags","Bei Regen","Die Tageszeit ist egal"],0,"Man braucht einen großen Temperaturunterschied und keine Sonne auf der Fassade.","Die Kamera braucht einen großen Unterschied zwischen innen und außen."],
+[6,"Bis wann wurde in Deutschland Asbest verbaut?",["Bis zum Verbot 1993","Bis 1960","Bis 2010","Nie"],0,"Vor allem Häuser von 1960 bis 1993 auf Asbest prüfen, bevor saniert wird.","Das Verbot kam kurz nach der Wiedervereinigung."],
+[6,"Was bringt ein hydraulischer Abgleich?",["Gleichmäßige Wärme in allen Räumen und weniger Energieverbrauch","Mehr Wasserdruck in der Dusche","Kühlere Räume im Sommer","Nichts"],0,"Jeder Heizkörper bekommt genau so viel Heizwasser, wie er braucht. Er kann auch die Heizungsprüfung nach § 60b GModG nachweisen.","Es geht um die Verteilung des Heizwassers auf die Heizkörper."],
+[7,"Wo finden erfahrene Investoren laut Beerbaum die meisten guten Angebote?",["Off-Market über persönliche Kontakte","Auf Immobilienportalen","In der Zeitung","Auf Instagram"],0,"Über Handwerker, Makler, Banken, Hausverwaltungen, Versteigerungen und Erbengemeinschaften.","Die besten Angebote sind weg, bevor sie öffentlich werden."],
+[7,"Bei welchen Objekten lässt sich ein Verkäuferdarlehen eher verhandeln?",["Bei großen, teuren Objekten","Bei kleinen Wohnungen","Nie","Nur bei Neubauten"],0,"Wer 1,5–2 Mio. € bekommt, braucht nicht alles sofort. Die Bank will trotzdem den ersten Rang.","Wer sehr viel Geld bekommt, kann leichter einen Teil später nehmen."],
+[7,"Was gehört in einen Partnervertrag mit einem Mitinvestor?",["Ausstieg, Todesfall, Vorkaufsrecht","Nur die Namen der Partner","Nichts, ein Handschlag reicht","Nur das Lieblingsobjekt"],0,"Ohne Ausstiegsregel wird aus Partnern schnell Streit.","Denk an den Fall, dass einer nicht mehr mitmachen kann oder will."],
+[7,"Welche Frage gehört in die Schnellprüfung eines Angebots?",["Rechnet es sich auch im schlechten Fall?","Gefällt mir die Fassadenfarbe?","Ist das Haus auf Instagram bekannt?","Wie alt ist der Makler?"],0,"Das Haus muss von Anfang an einen Überschuss bringen, auch wenn das Bauamt nein sagt oder ein Mieter ausfällt.","Gute Investoren planen zuerst, was schiefgehen kann."],
+[7,"Ein Haus wird zum Faktor 10 angeboten. Wie solltest du reagieren?",["Die Rendite ist hoch, aber prüfe genau, warum es so günstig ist","Sofort kaufen","Das Haus ist zu teuer","Der Faktor spielt keine Rolle"],0,"Sehr hohe Renditen deuten oft auf schwache Lage, Leerstand oder Bauschäden.","Faktor 10 heißt 10 % Bruttorendite. Warum verkauft jemand so günstig?"],
+[7,"Mit wie viel Kaufnebenkosten musst du bei 1 Mio. € Kaufpreis in Hessen rechnen?",["Rund 80.000–116.000 €","Rund 10.000 €","Rund 300.000 €","Keine"],0,"6 % Grunderwerbsteuer und rund 2 % Notar und Grundbuch ergeben 80.000 €. Mit 3,57 % Makler sind es knapp 116.000 €.","Grunderwerbsteuer 6 %, Notar und Grundbuch rund 2 %, Makler eventuell 3,57 %."],
+[7,"Was solltest du vor dem Kauf eines Online-Immobilienkurses prüfen?",["Ob er von der ZFU zugelassen ist","Wie viele Videos er hat","Wie viele Follower der Anbieter hat","Gar nichts"],0,"Ohne Zulassung kann der Vertrag nichtig sein (BGH III ZR 109/24). Dann bekommst du dein Geld eventuell zurück.","Es gibt eine staatliche Stelle, die Fernunterricht zulässt."],
+[7,"Wie viel Provision bringt dir die Vermittlung eines Mehrfamilienhauses für 900.000 € bei 3 % netto?",["27.000 €","2.700 €","270.000 €","9.000 €"],0,"900.000 € × 3 % = 27.000 €. Vermitteln braucht kein Eigenkapital, aber eine Erlaubnis nach § 34c GewO.","1 % von 900.000 € sind 9.000 €."],
+[7,"Warum sind ganze Mehrfamilienhäuser oft besser als viele einzelne Wohnungen?",["Ein Mieterausfall wiegt weniger, und alles läuft über einen Kauf","Weil sie immer billiger sind","Weil keine Grunderwerbsteuer anfällt","Es gibt keinen Vorteil"],0,"Bei einer einzelnen Wohnung ist ein Ausfall gleich 100 % Ausfall. Beim Mehrfamilienhaus mit 8 Wohnungen sind es 12,5 %.","Was passiert mit deiner Miete, wenn ein Mieter nicht zahlt: bei 1 Wohnung und bei 8?"]];
+
+const R=(a,b,s=1)=>Math.round((a+Math.random()*(b-a))/s)*s, EUR=x=>Math.round(x).toLocaleString("de-DE")+" €", K=x=>String(x).replace(".",",");
+const RECHNEN=[
+ ()=>{const kp=R(300000,1500000,10000),m=R(1500,9000,50);return{q:`Kaufpreis ${EUR(kp)}, Kaltmiete ${EUR(m)} im Monat. Wie hoch ist der Kaufpreisfaktor? (eine Nachkommastelle)`,a:kp/(m*12),u:"",tol:.06,e:`${EUR(kp)} ÷ (${EUR(m)} × 12) = ${K((kp/(m*12)).toFixed(1))}`,h:"Faktor = Kaufpreis ÷ (Monatsmiete × 12)"}},
+ ()=>{const kp=R(300000,1500000,10000),m=R(1500,9000,50);return{q:`Kaufpreis ${EUR(kp)}, Kaltmiete ${EUR(m)} im Monat. Wie hoch ist die Bruttomietrendite in %?`,a:m*12/kp*100,u:"%",tol:.06,e:`${EUR(m*12)} ÷ ${EUR(kp)} × 100`,h:"Bruttorendite = Jahreskaltmiete ÷ Kaufpreis × 100"}},
+ ()=>{const kp=R(200000,1200000,10000),mk=Math.random()<.5;return{q:`Kaufpreis ${EUR(kp)} in Hessen, ${mk?"mit 3,57 % Makler":"ohne Makler"}. Wie hoch sind die Kaufnebenkosten mit 6 % Grunderwerbsteuer und 2 % Notar und Grundbuch?`,a:kp*(mk?.1157:.08),u:"€",tol:.02,e:`${EUR(kp)} × ${mk?"11,57":"8"} %`,h:mk?"Nebenkosten = Kaufpreis × (6 % + 2 % + 3,57 %)":"Nebenkosten = Kaufpreis × (6 % + 2 %)"}},
+ ()=>{const d=R(200000,900000,10000),z=R(30,50,1)/10,t=R(10,30,5)/10;return{q:`Darlehen ${EUR(d)}, ${K(z)} % Zins und ${K(t)} % anfängliche Tilgung. Wie hoch ist die Monatsrate?`,a:d*(z+t)/100/12,u:"€",tol:.02,e:`${EUR(d)} × ${K(+(z+t).toFixed(1))} % ÷ 12`,h:"Monatsrate = Darlehen × (Zins + Tilgung) ÷ 100 ÷ 12"}},
+ ()=>{const r=R(300,1500,50),z=R(55,70,1)/10;return{q:`Du zahlst eine Autorate von ${EUR(r)} im Monat. Um wie viel weniger Kredit bekommst du für ein Haus bei ${K(z)} % Zins und Tilgung zusammen?`,a:r*12/(z/100),u:"€",tol:.03,e:`${EUR(r)} × 12 ÷ ${K(z)} %`,h:"Weniger Kredit = Monatsrate × 12 ÷ (Zins und Tilgung in Prozent ÷ 100)"}},
+ ()=>{const m=R(2000,8000,100),rate=R(1000,5000,100),k=R(200,900,50);return{q:`Kaltmiete ${EUR(m)}, Bankrate ${EUR(rate)} und nicht umlegbare Kosten ${EUR(k)} im Monat. Wie hoch ist der monatliche Cashflow?`,a:m-rate-k,u:"€",tol:.01,e:`${EUR(m)} − ${EUR(rate)} − ${EUR(k)}`,h:"Cashflow = Kaltmiete − Bankrate − nicht umlegbare Kosten (kann auch negativ sein)"}},
+ ()=>{const m=R(400,1200,10);return{q:`Die Kaltmiete beträgt ${EUR(m)} im Monat, in der Gemeinde gilt eine Kappungsgrenze von 15 %. Auf wie viel Euro darf die Miete in 3 Jahren höchstens steigen?`,a:m*1.15,u:"€",tol:.01,e:`${EUR(m)} × 1,15, aber nie über die ortsübliche Vergleichsmiete`,h:"Höchstmiete = heutige Miete × 1,15"}},
+ ()=>{const g=R(150000,800000,10000);return{q:`Der Gebäudeanteil am Kaufpreis beträgt ${EUR(g)}. Für wie viel Euro (netto) darfst du in den ersten 3 Jahren höchstens sanieren, ohne die 15-%-Grenze zu überschreiten?`,a:g*.15,u:"€",tol:.01,e:`${EUR(g)} × 15 %`,h:"Grenze = Gebäudeanteil × 0,15"}},
+ ()=>{const j=R(40000,200000,1000),zi=R(45,60,5)/10;return{q:`Jahreskaltmiete ${EUR(j)}, davon 20 % Bewirtschaftungskosten, Liegenschaftszins ${K(zi)} %. Wie hoch ist der vereinfachte Ertragswert?`,a:j*.8/(zi/100),u:"€",tol:.03,e:`${EUR(j)} × 0,8 ÷ ${K(zi)} % (ohne Bodenwert und Restnutzungsdauer)`,h:"Ertragswert = Jahresmiete × 0,8 ÷ (Zins ÷ 100)"}}];
+
+const LEVEL=[[0,"Mieter"],[100,"Hausmeister"],[300,"Kleinvermieter"],[700,"Vermieter"],[1500,"Investor"],[3000,"Projektentwickler"],[6000,"Immobilien-Hai"],[10000,"Hessen-Schocker"]];
+const ERFOLGE=[["erste","Erste Lektion","Eine Lektion beendet"],["serie3","Dranbleiber","3 Tage Serie"],["serie7","Eiserne Woche","7 Tage Serie"],["rechner","Rechenprofi","20 Rechenaufgaben richtig"],["hundert","Hundert richtige","100 richtige Antworten"],["boss","Erster Boss","Eine Bossprüfung bestanden"],["alleboss","Großmeister","Alle 7 Bossprüfungen"],["investor","Investor","Level Investor erreicht"],["kurs","Formelfuchs","Einen Crashkurs abgeschlossen"],["allekurse","Wissensdurst","Alle 7 Crashkurse"]];
+const ABST=[0,1,3,7,14,30], TAGESZIEL=50, KEY="immo_akademie_v1", KURS_XP=20;
+
+const iso=d=>new Date(d.getTime()-d.getTimezoneOffset()*6e4).toISOString().slice(0,10);
+const heute=()=>iso(new Date()), plus=t=>{const d=new Date();d.setDate(d.getDate()+t);return iso(d)};
+const plusAb=(s,n)=>{const d=new Date(s+"T12:00:00");d.setDate(d.getDate()+n);return iso(d)};
+const tage=(a,b)=>Math.round((new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/864e5);
+const datum=s=>s?s.split("-").reverse().join("."):"";
+const neuerStand=()=>({xp:0,serie:0,zuletzt:"",tag:{d:"",xp:0},k:{},medaille:{},kurs:{},richtig:0,rechnen:0,erfolge:{},gesichert:"",gesichertXp:0});
+let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
+S=Object.assign(neuerStand(),S||{});
+const speichern=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const level=()=>{let i=0;LEVEL.forEach((l,j)=>{if(S.xp>=l[0])i=j});return i};
+const app=document.getElementById("app");
+let runde=null, ansicht="start", installEvt=null;
+const istApp=()=>matchMedia("(display-mode: standalone)").matches||navigator.standalone===true;
+const istIOS=()=>/iPhone|iPad|iPod/.test(navigator.userAgent)||(navigator.platform==="MacIntel"&&navigator.maxTouchPoints>1);
+
+function mischen(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function faellig(){const h=heute();return Q.map((q,i)=>i).filter(i=>S.k[i]&&S.k[i][1]<=h)}
+function weltStand(w){const ids=Q.map((q,i)=>i).filter(i=>Q[i][0]===w);return Math.round(ids.filter(i=>S.k[i]&&S.k[i][0]>=3).length/ids.length*100)}
+function xpBuchen(x){
+ S.xp+=x;if(S.tag.d!==heute())S.tag={d:heute(),xp:0};const vorher=S.tag.xp;S.tag.xp+=x;
+ if(vorher<TAGESZIEL&&S.tag.xp>=TAGESZIEL&&S.zuletzt!==heute()){S.serie=(S.zuletzt===plus(-1))?S.serie+1:1;S.zuletzt=heute()}
+}
+function erfolg(id){if(!S.erfolge[id]){S.erfolge[id]=heute();return ERFOLGE.find(e=>e[0]===id)[1]}}
+function neueErfolge(){const m=Object.keys(S.medaille).length,k=Object.keys(S.kurs).length;
+ return [S.serie>=3&&erfolg("serie3"),S.serie>=7&&erfolg("serie7"),S.rechnen>=20&&erfolg("rechner"),S.richtig>=100&&erfolg("hundert"),m>=1&&erfolg("boss"),m>=7&&erfolg("alleboss"),level()>=4&&erfolg("investor"),k>=1&&erfolg("kurs"),k>=7&&erfolg("allekurse")].filter(Boolean)}
+function sicherungFaellig(){return S.xp>0&&(!S.gesichert||tage(S.gesichert,heute())>=7||S.xp-(S.gesichertXp||0)>=150)}
+
+function start(){
+ ansicht="start";runde=null;
+ if(S.tag.d!==heute())S.tag={d:heute(),xp:0};
+ const lv=level(),nx=LEVEL[lv+1],vor=LEVEL[lv][0],pr=nx?Math.round((S.xp-vor)/(nx[0]-vor)*100):100,f=faellig().length;
+ app.innerHTML=`<div class="kopf"><h1>🏠 Immobilien-Akademie</h1><div class="reihe"><span class="chip">🔥 ${S.serie} Tage</span><span class="chip">⭐ ${S.xp} XP</span></div></div>
+ ${S.xp===0?`<div class="karte hinweis"><b>👋 Willkommen!</b><p>Fang mit dem <b>Crashkurs</b> der ersten Welt an: Dort lernst du die Formeln an kleinen Beispielen. Danach übst du sie in der Lektion, und am Ende wartet der Boss.</p><button class="haupt" onclick="kurs(1)">📘 Crashkurs Grundrechnung</button></div>`:""}
+ <div class="karte"><b>Level ${lv+1}: ${LEVEL[lv][1]}</b>${nx?` <span class="klein">· noch ${nx[0]-S.xp} XP bis ${nx[1]}</span>`:""}<div class="balken"><i style="width:${pr}%"></i></div>
+ <div class="klein">Tagesziel: ${Math.min(S.tag.xp,TAGESZIEL)} / ${TAGESZIEL} XP</div><div class="balken"><i style="width:${Math.min(S.tag.xp/TAGESZIEL*100,100)}%"></i></div>
+ <div class="reihe" style="margin-top:12px"><button class="haupt" onclick="lektion(0)">▶ Weiterlernen${f?` (${f} ${f===1?"Wiederholung":"Wiederholungen"})`:""}</button><button onclick="arena()">🧮 Rechen-Arena</button><button onclick="sicherung()">💾 Sichern &amp; Laden</button></div></div>
+ ${sicherungFaellig()?`<div class="karte hinweis"><b>💾 Spielstand sichern</b><p class="klein">Letzte Sicherung: ${S.gesichert?datum(S.gesichert):"noch nie"}. Schick dir einen Sicherungslink, dann ist dein Stand auch nach dem Löschen der Browserdaten oder auf einem neuen Handy wieder da.</p><button class="haupt" onclick="linkTeilen()">🔗 Sicherungslink senden</button></div>`:""}
+ ${installHinweis()}
+ <h2>Welten</h2><div class="welten">${WELTEN.map(w=>`<div class="welt"><b>${w.i} ${w.n} ${S.medaille[w.id]?'<span class="gold">🏅</span>':""}</b><span class="klein">${w.t}</span><div class="balken"><i style="width:${weltStand(w.id)}%"></i></div><span class="klein">${weltStand(w.id)} % sicher</span><div class="reihe"><button class="${S.kurs[w.id]?"":"offen"}" onclick="kurs(${w.id})">📘 Crashkurs${S.kurs[w.id]?" ✓":""}</button><button onclick="lektion(${w.id})">Lektion</button><button onclick="boss(${w.id})">👑 Boss</button></div></div>`).join("")}</div>
+ <h2>Erfolge</h2><div class="abz">${ERFOLGE.map(e=>`<div class="${S.erfolge[e[0]]?"hat":""}">${S.erfolge[e[0]]?"🏆":"🔒"} <b>${e[1]}</b><br>${e[2]}</div>`).join("")}</div>
+ <p class="klein" style="margin-top:24px">Dein Stand wird auf diesem Gerät gespeichert. Mit einem Sicherungslink holst du ihn jederzeit zurück. Stand der Fakten: November 2026. Gesetze vor echten Entscheidungen nachprüfen.</p>`;
+}
+
+/* ---------- Installieren ---------- */
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();installEvt=e;if(ansicht==="start")start()});
+window.addEventListener("appinstalled",()=>{installEvt=null;if(ansicht==="start")start()});
+function installHinweis(){
+ if(istApp()||location.protocol==="file:")return"";
+ if(istIOS())return`<div class="karte"><b>📲 Als App installieren</b><p class="klein">Unten in Safari auf <b>Teilen</b> tippen (Quadrat mit Pfeil nach oben), dann <b>Zum Home-Bildschirm</b>. Die App startet dann wie jede andere App und hat ihren eigenen Speicher: Löschst du den Safari-Verlauf, bleibt dein Stand erhalten.</p></div>`;
+ return`<div class="karte"><b>📲 Als App installieren</b><p class="klein">Dann startet sie wie eine normale App, auch ohne Internet.</p>${installEvt?`<button class="haupt" onclick="installieren()">App installieren</button>`:`<p class="klein">Im Chrome-Menü ⋮ auf <b>App installieren</b> oder <b>Zum Startbildschirm hinzufügen</b> tippen.</p>`}</div>`;
+}
+async function installieren(){if(!installEvt)return;installEvt.prompt();try{await installEvt.userChoice}catch(e){}installEvt=null;start()}
+
+/* ---------- Crashkurs ---------- */
+function kurs(w,nr=0){
+ ansicht="kurs";runde=null;
+ const L=KURS[w],c=L[nr],W=WELTEN[w-1];
+ app.innerHTML=`<div class="kopf"><button onclick="start()">← Übersicht</button><span class="chip">📘 Crashkurs · ${nr+1} / ${L.length}</span></div><div class="balken"><i style="width:${(nr+1)/L.length*100}%"></i></div>
+ <div class="karte" id="kurskarte"><span class="klein">${W.i} ${W.n}</span><h2 style="margin-top:6px">${c.t}</h2>
+ ${c.f?`<div class="formel">${c.f.split(" · ").map(z=>`<div>${z}</div>`).join("")}</div>`:""}
+ ${c.b?`<div class="beispiel"><b>Beispiel:</b> ${c.b}</div>`:""}
+ ${c.m?`<p class="merke"><b>Merke:</b> ${c.m}</p>`:""}
+ <div class="reihe" style="margin-top:14px">${nr>0?`<button onclick="kurs(${w},${nr-1})">← Zurück</button>`:""}${nr<L.length-1?`<button class="haupt" id="weiter" onclick="kurs(${w},${nr+1})">Weiter →</button>`:`<button class="haupt" id="weiter" onclick="kursFertig(${w})">✓ Crashkurs abschließen</button>`}</div></div>
+ <p class="klein">Tipp: Du kannst auch nach links und rechts wischen.</p>`;
+ window.scrollTo(0,0);
+ const k=document.getElementById("kurskarte");let x0=null,y0=null;
+ k.addEventListener("touchstart",e=>{x0=e.touches[0].clientX;y0=e.touches[0].clientY},{passive:true});
+ k.addEventListener("touchend",e=>{if(x0===null)return;const dx=e.changedTouches[0].clientX-x0,dy=e.changedTouches[0].clientY-y0;x0=null;
+  if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){if(dx<0)(nr<L.length-1?kurs(w,nr+1):kursFertig(w));else if(nr>0)kurs(w,nr-1)}},{passive:true});
+}
+function kursFertig(w){
+ ansicht="kursende";const W=WELTEN[w-1],erst=!S.kurs[w];
+ if(erst){S.kurs[w]=heute();xpBuchen(KURS_XP)}
+ const neu=neueErfolge();speichern();
+ app.innerHTML=`<div class="karte" style="text-align:center"><div class="gross">🎓</div><h2 style="margin-top:4px">Crashkurs ${W.n} geschafft!</h2>${erst?`<p><b>+${KURS_XP} XP</b></p>`:""}${neu.map(n=>`<p>🏆 Neuer Erfolg: <b>${n}</b></p>`).join("")}
+ <div class="reihe" style="justify-content:center;margin-top:12px"><button class="haupt" onclick="lektion(${w})">▶ Jetzt üben</button><button onclick="kurs(${w})">Nochmal lesen</button><button onclick="start()">Übersicht</button></div></div>
+ <div class="karte"><b>Deine Formeln auf einen Blick</b><ol class="formelliste">${KURS[w].filter(c=>c.f).map(c=>`<li><b>${c.t}:</b> ${c.f.split(" · ").join("; ")}</li>`).join("")}</ol></div>`;
+ window.scrollTo(0,0);
+}
+
+/* ---------- Lektion, Arena, Boss ---------- */
+function aufgaben(ids,n,calc){const l=mischen(ids).slice(0,n).map(i=>({t:"q",i}));for(let c=0;c<calc;c++)l.push({t:"c",r:RECHNEN[Math.floor(Math.random()*RECHNEN.length)]()});return mischen(l)}
+function lektion(w){
+ const alle=Q.map((q,i)=>i).filter(i=>!w||Q[i][0]===w), f=faellig().filter(i=>alle.includes(i)), neu=alle.filter(i=>!S.k[i]), rest=alle.filter(i=>!f.includes(i)&&!neu.includes(i));
+ const ids=[...mischen(f).slice(0,6),...mischen(neu).slice(0,6),...mischen(rest)].slice(0,8);
+ runde={typ:"lektion",w,liste:aufgaben(ids,8,2),nr:0,gut:0,xp:0,combo:0};frage();
+}
+function arena(){runde={typ:"arena",liste:Array.from({length:8},()=>({t:"c",r:RECHNEN[Math.floor(Math.random()*RECHNEN.length)]()})),nr:0,gut:0,xp:0,combo:0};frage()}
+function boss(w){runde={typ:"boss",w,liste:aufgaben(Q.map((q,i)=>i).filter(i=>Q[i][0]===w),Q.filter(q=>q[0]===w).length,2),nr:0,gut:0,xp:0,combo:0};frage()}
+function frage(){
+ ansicht="frage";
+ const a=runde.liste[runde.nr],kopf=`<div class="kopf"><button onclick="start()">← Übersicht</button><span class="chip">${runde.typ==="boss"?"👑 Boss · ":""}Frage ${runde.nr+1} / ${runde.liste.length}${runde.combo>=3?` · 🔥 Combo ×${runde.combo}`:""}</span></div><div class="balken"><i style="width:${runde.nr/runde.liste.length*100}%"></i></div>`;
+ const tippZeile=`<div style="margin-top:10px"><button class="tippknopf" id="tipp">💡 Tipp anzeigen (halbe XP)</button><div id="tippbox"></div></div>`;
+ if(a.t==="q"){const q=Q[a.i],ord=mischen([0,1,2,3]);
+  app.innerHTML=kopf+`<div class="karte"><span class="klein">${WELTEN[q[0]-1].i} ${WELTEN[q[0]-1].n}</span><h2 style="margin-top:6px">${q[1]}</h2>${tippZeile}<div class="antworten">${ord.map(o=>`<button data-o="${o}">${q[2][o]}</button>`).join("")}</div><div id="fb"></div></div>`;
+  app.querySelectorAll(".antworten button").forEach(b=>b.onclick=()=>antwort(+b.dataset.o===q[3],b,q[4],a));
+ }else{const r=a.r;
+  app.innerHTML=kopf+`<div class="karte"><span class="klein">🧮 Rechenaufgabe</span><h2 style="margin-top:6px">${r.q}</h2>${tippZeile}<div class="reihe" style="margin-top:12px"><input id="ein" inputmode="decimal" placeholder="Ergebnis ${r.u}" aria-label="Ergebnis"><button class="haupt" id="ok">Prüfen</button></div><div id="fb"></div></div>`;
+  const ein=document.getElementById("ein");if(!matchMedia("(pointer:coarse)").matches)ein.focus();
+  const pruef=()=>{const v=parseFloat(ein.value.replace(/\s|€|%/g,"").replace(/\./g,"").replace(",","."));if(isNaN(v))return;const gut=Math.abs(v-r.a)<=Math.abs(r.a)*r.tol+0.05;antwort(gut,null,`Lösung: ${r.u==="%"?K(r.a.toFixed(1))+" %":r.u==="€"?EUR(r.a):K(r.a.toFixed(1))}. ${r.e}`,a)};
+  document.getElementById("ok").onclick=pruef;ein.onkeydown=e=>{if(e.key==="Enter")pruef()};
+ }
+ document.getElementById("tipp").onclick=function(){a.tipp=true;this.disabled=true;document.getElementById("tippbox").innerHTML=`<div class="tipp">💡 ${a.t==="q"?Q[a.i][5]:a.r.h}</div>`};
+ window.scrollTo(0,0);
+}
+function antwort(gut,knopf,erkl,a){
+ app.querySelectorAll(".antworten button,#ok,#ein,#tipp").forEach(b=>b.disabled=true);
+ if(a.t==="q"){const q=Q[a.i];app.querySelectorAll(".antworten button").forEach(b=>{if(+b.dataset.o===q[3])b.classList.add("richtig")});if(!gut&&knopf)knopf.classList.add("falsch");
+  const k=S.k[a.i]||[0,heute()];k[0]=gut?Math.min(k[0]+1,5):1;k[1]=plus(ABST[k[0]]);S.k[a.i]=k;}
+ let x=0;
+ if(gut){runde.combo++;runde.gut++;x=10+(runde.combo>=3?5:0)+(a.t==="c"?5:0);if(a.tipp)x=Math.ceil(x/2);runde.xp+=x;S.richtig++;if(a.t==="c")S.rechnen++}else runde.combo=0;
+ document.getElementById("fb").innerHTML=`<div class="erkl"><b>${gut?`✅ Richtig! +${x} XP${a.tipp?" (mit Tipp)":""}`:"❌ Nicht ganz."}</b> ${erkl}</div><div class="reihe" style="margin-top:12px"><button class="haupt" id="weiter">${runde.nr+1<runde.liste.length?"Weiter →":"Auswertung"}</button></div>`;
+ const w=document.getElementById("weiter");w.focus({preventScroll:true});w.scrollIntoView({block:"nearest",behavior:"smooth"});
+ w.onclick=()=>{runde.nr++;runde.nr<runde.liste.length?frage():ende()};
+}
+function ende(){
+ ansicht="ende";
+ const lvAlt=level(),quote=Math.round(runde.gut/runde.liste.length*100);let extra="";
+ if(runde.typ==="boss"&&quote>=80&&!S.medaille[runde.w]){S.medaille[runde.w]=heute();runde.xp+=50;extra=`<p class="gold"><b>🏅 Boss besiegt! +50 XP</b></p>`}
+ xpBuchen(runde.xp);
+ const neu=[erfolg("erste"),...neueErfolge()].filter(Boolean);speichern();const lv=level();
+ if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+ app.innerHTML=`<div class="karte" style="text-align:center"><div class="gross">${quote>=80?"🎉":quote>=50?"👍":"💪"} ${quote} %</div><p>${runde.gut} von ${runde.liste.length} richtig · <b>+${runde.xp} XP</b></p>${extra}
+ ${runde.typ==="boss"&&quote<80?`<p>Für den Boss brauchst du 80 %. Falsche Fragen kommen in der Wiederholung zurück.</p>`:""}
+ ${lv>lvAlt?`<p class="gold"><b>⬆ Level ${lv+1}: ${LEVEL[lv][1]}!</b></p>`:""}${neu.map(n=>`<p>🏆 Neuer Erfolg: <b>${n}</b></p>`).join("")}
+ <div class="reihe" style="justify-content:center;margin-top:12px"><button class="haupt" onclick="${runde.typ==="arena"?"arena()":runde.typ==="boss"?`boss(${runde.w})`:`lektion(${runde.w||0})`}">Nochmal</button><button onclick="start()">Übersicht</button></div></div>
+ ${sicherungFaellig()?`<div class="karte hinweis"><b>💾 Denk an deine Sicherung</b><p class="klein">Ein Sicherungslink an dich selbst dauert fünf Sekunden und rettet deinen Stand, falls Browserdaten gelöscht werden.</p><button class="haupt" onclick="linkTeilen()">🔗 Sicherungslink senden</button></div>`:""}`;
+ window.scrollTo(0,0);
+}
+
+/* ---------- Sichern und Laden ---------- */
+const b64u=s=>btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+const ub64=s=>atob(s.replace(/-/g,"+").replace(/_/g,"/")+"===".slice((s.length+3)%4));
+function codeErzeugen(){
+ const t=heute();let k="";
+ Q.forEach((q,i)=>{const e=S.k[i];k+=String.fromCharCode(e?e[0]*32+Math.max(0,Math.min(31,tage(t,e[1]))):0)});
+ const ids=o=>WELTEN.filter(w=>o[w.id]).map(w=>w.id).join("");
+ return b64u(JSON.stringify({v:1,t,x:S.xp,s:S.serie,z:S.zuletzt,r:S.richtig,c:S.rechnen,m:ids(S.medaille),u:ids(S.kurs),e:ERFOLGE.map((e,i)=>S.erfolge[e[0]]?i.toString(36):"").join(""),k:btoa(k)}));
+}
+function codeLesen(c){
+ const o=JSON.parse(ub64(c));if(o.v!==1||typeof o.x!=="number"||!/^\d{4}-\d\d-\d\d$/.test(o.t))throw 0;
+ const k={},raw=atob(o.k||"");
+ for(let i=0;i<raw.length&&i<Q.length;i++){const b=raw.charCodeAt(i);if(b>=32)k[i]=[Math.min(b>>5,5),plusAb(o.t,b&31)]}
+ const menge=s=>Object.fromEntries(String(s||"").split("").filter(Boolean).map(id=>[id,o.t]));
+ const erf={};String(o.e||"").split("").forEach(ch=>{const e=ERFOLGE[parseInt(ch,36)];if(e)erf[e[0]]=o.t});
+ return Object.assign(neuerStand(),{xp:o.x,serie:o.s||0,zuletzt:o.z||"",richtig:o.r||0,rechnen:o.c||0,medaille:menge(o.m),kurs:menge(o.u),erfolge:erf,k,gesichert:o.t,gesichertXp:o.x});
+}
+function sicherungsLink(){return(location.protocol==="file:"?APP_URL:location.origin+location.pathname)+"#stand="+codeErzeugen()}
+function zurueck(){if(ansicht==="sicherung")sicherung();else if(ansicht==="start")start()}
+async function linkTeilen(){
+ const url=sicherungsLink(),text=`Mein Spielstand der Immobilien-Akademie: ${S.xp} XP, gesichert am ${datum(heute())}. Zum Laden den Link antippen oder in der App unter „Sichern & Laden“ einfügen.`;
+ let ok=false;
+ if(navigator.share&&matchMedia("(pointer:coarse)").matches){try{await navigator.share({title:"Immo-Akademie Spielstand",text,url});ok=true}catch(e){if(e&&e.name==="AbortError")return}}
+ if(!ok){try{await navigator.clipboard.writeText(url);alert("Sicherungslink kopiert. Schick ihn dir selbst, zum Beispiel per WhatsApp oder in eine Notiz, und heb ihn auf.");ok=true}catch(e){ok=prompt("Kopiere diesen Sicherungslink und heb ihn gut auf:",url)!==null}}
+ if(ok){S.gesichert=heute();S.gesichertXp=S.xp;speichern()}
+ if(ansicht==="ende")start();else zurueck();
+}
+function codeLaden(text){
+ const s=String(text||"").trim(),m=s.match(/stand=([\w-]+)/),c=m?m[1]:s;
+ if(!c){alert("Füge zuerst deinen Sicherungslink ein.");return}
+ let d;try{d=codeLesen(c)}catch(e){alert("Das ist kein gültiger Sicherungslink der Immobilien-Akademie.");return}
+ if(S.xp>0){const f=S.xp>d.xp?`Achtung: Auf diesem Gerät hast du schon ${S.xp} XP, der Sicherungslink vom ${datum(d.gesichert)} nur ${d.xp} XP. Trotzdem den älteren Stand laden?`:`Spielstand vom ${datum(d.gesichert)} mit ${d.xp} XP laden? Dein jetziger Stand (${S.xp} XP) wird ersetzt.`;if(!confirm(f))return}
+ S=d;speichern();alert(`Spielstand geladen: ${d.xp} XP, ${d.serie} Tage Serie.`);start();
+}
+function dateiSichern(){
+ S.gesichert=heute();S.gesichertXp=S.xp;speichern();
+ const a=document.createElement("a");a.href=URL.createObjectURL(new Blob([JSON.stringify(S)],{type:"application/json"}));
+ a.download="immo-akademie-stand-"+heute()+".json";document.body.appendChild(a);a.click();a.remove();
+ alert("Die Datei liegt jetzt in deinem Download-Ordner. Zum Wiederherstellen unter „Sichern & Laden“ auf „Datei laden“ tippen.");sicherung();
+}
+function dateiLaden(){
+ const i=document.createElement("input");i.type="file";i.accept=".json,application/json";
+ i.onchange=()=>{const f=i.files[0];if(!f)return;f.text().then(t=>{try{const d=JSON.parse(t);if(typeof d.xp!=="number"||typeof d.k!=="object")throw 0;
+  if(S.xp>0&&!confirm(`Spielstand mit ${d.xp} XP aus der Datei laden? Dein jetziger Stand (${S.xp} XP) wird ersetzt.`))return;
+  S=Object.assign(neuerStand(),d);speichern();alert("Spielstand geladen: "+d.xp+" XP, "+(d.serie||0)+" Tage Serie.");start()}catch(e){alert("Diese Datei ist kein Spielstand der Immobilien-Akademie.")}})};
+ i.click();
+}
+function sicherung(){
+ ansicht="sicherung";runde=null;
+ app.innerHTML=`<div class="kopf"><button onclick="start()">← Übersicht</button></div>
+ <div class="karte"><h2 style="margin-top:0">💾 Spielstand sichern</h2>
+ <p>Dein Stand liegt auf diesem Gerät. Damit er nach dem Löschen der Browserdaten oder auf einem neuen Handy wieder da ist, schick dir einen <b>Sicherungslink</b>, zum Beispiel per WhatsApp an dich selbst oder in eine Notiz.</p>
+ <div class="reihe"><button class="haupt" onclick="linkTeilen()">🔗 Sicherungslink senden</button><button onclick="dateiSichern()">📄 Als Datei speichern</button></div>
+ <p class="klein">Letzte Sicherung: ${S.gesichert?`${datum(S.gesichert)} (${S.gesichertXp||0} XP)`:"noch nie"} · Jetzt: ${S.xp} XP</p></div>
+ <div class="karte"><h2 style="margin-top:0">📥 Spielstand laden</h2>
+ <p>Tippe deinen Sicherungslink einfach an. Öffnet er sich im falschen Browser, kopiere ihn und füge ihn hier ein:</p>
+ <div class="reihe"><input class="breit" id="code" placeholder="Sicherungslink einfügen" aria-label="Sicherungslink" autocomplete="off"><button class="haupt" onclick="codeLaden(document.getElementById('code').value)">Laden</button></div>
+ <div class="reihe" style="margin-top:8px"><button onclick="dateiLaden()">📂 Datei laden</button></div></div>
+ <div class="karte"><b>Wann ist mein Stand in Gefahr?</b><p class="klein">Den Verlauf zu löschen schadet nicht. Löschst du aber „Cookies und Websitedaten“ oder alle Browserdaten, ist der Stand auf diesem Gerät weg. Auf dem iPhone hat die App auf dem Home-Bildschirm ihren eigenen Speicher, unabhängig von Safari. Mit dem Sicherungslink bist du in jedem Fall auf der sicheren Seite.</p></div>`;
+ window.scrollTo(0,0);
+}
+
+/* ---------- Start ---------- */
+if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))navigator.serviceWorker.register("sw.js").catch(()=>{});
+const h=location.hash.match(/stand=([\w-]+)/);
+start();
+if(h){history.replaceState(null,"",location.pathname+location.search);setTimeout(()=>codeLaden(h[1]),300)}
+</script>
+</body>
+</html>
