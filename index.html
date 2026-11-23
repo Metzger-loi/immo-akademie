@@ -56,6 +56,13 @@ button.tippknopf{border-style:dashed;border-color:color-mix(in srgb,var(--gold) 
 input{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(--linie);border-radius:10px;padding:10px 12px;width:200px;min-height:46px}
 .reihe input.breit{flex:1 1 220px}
 .gross{font-size:2.2rem;font-weight:700}.gold{color:var(--gold)}
+.fehler{color:var(--schlecht);font-weight:600}
+.rang{display:flex;align-items:center;gap:10px;padding:10px 0;border-top:1px solid var(--linie)}
+.rang:first-of-type{margin-top:8px}
+.rang.du b{color:var(--akzent)}
+.platz{width:28px;text-align:center;font-size:1.2rem}
+.rname{flex:1;min-width:0}
+.rxp{font-weight:700;white-space:nowrap}
 .abz{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
 .abz div{border:1px dashed var(--linie);border-radius:10px;padding:8px 10px;font-size:.9rem;color:var(--leise)}
 .abz div.hat{border-style:solid;color:var(--text)}
@@ -72,6 +79,8 @@ input{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(-
 <body><main id="app"></main>
 <script>
 const APP_URL="https://metzger-loi.github.io/immo-akademie/";
+/* Online-Konten (Firestore). Die Zugangscodes stehen nur in den Firestore-Regeln, nie im Code der App. */
+const CLOUD={projekt:"immo-akademie-8b97a",key:""};
 const WELTEN=[
  {id:1,n:"Grundrechnung",i:"🧮",t:"Miete, Faktor, Rendite, Cashflow"},
  {id:2,n:"Finanzierung",i:"🏦",t:"Kredit, Zinsbindung, Beleihung"},
@@ -234,10 +243,12 @@ const heute=()=>iso(new Date()), plus=t=>{const d=new Date();d.setDate(d.getDate
 const plusAb=(s,n)=>{const d=new Date(s+"T12:00:00");d.setDate(d.getDate()+n);return iso(d)};
 const tage=(a,b)=>Math.round((new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/864e5);
 const datum=s=>s?s.split("-").reverse().join("."):"";
-const neuerStand=()=>({xp:0,serie:0,zuletzt:"",tag:{d:"",xp:0},k:{},medaille:{},kurs:{},richtig:0,rechnen:0,erfolge:{},gesichert:"",gesichertXp:0});
+const neuerStand=()=>({xp:0,serie:0,zuletzt:"",tag:{d:"",xp:0},k:{},medaille:{},kurs:{},richtig:0,rechnen:0,erfolge:{},gesichert:"",gesichertXp:0,geaendert:0});
 let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 S=Object.assign(neuerStand(),S||{});
-const speichern=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+let konto=null;try{konto=JSON.parse(localStorage.getItem(KEY+"_konto"))}catch(e){}
+const speichern=still=>{if(!still)S.geaendert=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}if(konto&&!still)syncPlanen()};
+const esc=s=>String(s??"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 const level=()=>{let i=0;LEVEL.forEach((l,j)=>{if(S.xp>=l[0])i=j});return i};
 const app=document.getElementById("app");
 let runde=null, ansicht="start", installEvt=null;
@@ -254,22 +265,24 @@ function xpBuchen(x){
 function erfolg(id){if(!S.erfolge[id]){S.erfolge[id]=heute();return ERFOLGE.find(e=>e[0]===id)[1]}}
 function neueErfolge(){const m=Object.keys(S.medaille).length,k=Object.keys(S.kurs).length;
  return [S.serie>=3&&erfolg("serie3"),S.serie>=7&&erfolg("serie7"),S.rechnen>=20&&erfolg("rechner"),S.richtig>=100&&erfolg("hundert"),m>=1&&erfolg("boss"),m>=7&&erfolg("alleboss"),level()>=4&&erfolg("investor"),k>=1&&erfolg("kurs"),k>=7&&erfolg("allekurse")].filter(Boolean)}
-function sicherungFaellig(){return S.xp>0&&(!S.gesichert||tage(S.gesichert,heute())>=7||S.xp-(S.gesichertXp||0)>=150)}
+function sicherungFaellig(){return !konto&&S.xp>0&&(!S.gesichert||tage(S.gesichert,heute())>=7||S.xp-(S.gesichertXp||0)>=150)}
 
 function start(){
  ansicht="start";runde=null;
  if(S.tag.d!==heute())S.tag={d:heute(),xp:0};
  const lv=level(),nx=LEVEL[lv+1],vor=LEVEL[lv][0],pr=nx?Math.round((S.xp-vor)/(nx[0]-vor)*100):100,f=faellig().length;
- app.innerHTML=`<div class="kopf"><h1>🏠 Immobilien-Akademie</h1><div class="reihe"><span class="chip">🔥 ${S.serie} Tage</span><span class="chip">⭐ ${S.xp} XP</span></div></div>
+ app.innerHTML=`<div class="kopf"><h1>🏠 Immobilien-Akademie</h1><div class="reihe">${konto?`<span class="chip" id="syncchip">${syncText()}</span>`:""}<span class="chip">🔥 ${S.serie} Tage</span><span class="chip">⭐ ${S.xp} XP</span></div></div>
+ ${konto?`<p class="klein" style="margin:-6px 0 6px">Hallo ${esc(konto.name)}!</p>`:""}
  ${S.xp===0?`<div class="karte hinweis"><b>👋 Willkommen!</b><p>Fang mit dem <b>Crashkurs</b> der ersten Welt an: Dort lernst du die Formeln an kleinen Beispielen. Danach übst du sie in der Lektion, und am Ende wartet der Boss.</p><button class="haupt" onclick="kurs(1)">📘 Crashkurs Grundrechnung</button></div>`:""}
  <div class="karte"><b>Level ${lv+1}: ${LEVEL[lv][1]}</b>${nx?` <span class="klein">· noch ${nx[0]-S.xp} XP bis ${nx[1]}</span>`:""}<div class="balken"><i style="width:${pr}%"></i></div>
  <div class="klein">Tagesziel: ${Math.min(S.tag.xp,TAGESZIEL)} / ${TAGESZIEL} XP</div><div class="balken"><i style="width:${Math.min(S.tag.xp/TAGESZIEL*100,100)}%"></i></div>
  <div class="reihe" style="margin-top:12px"><button class="haupt" onclick="lektion(0)">▶ Weiterlernen${f?` (${f} ${f===1?"Wiederholung":"Wiederholungen"})`:""}</button><button onclick="arena()">🧮 Rechen-Arena</button><button onclick="sicherung()">💾 Sichern &amp; Laden</button></div></div>
  ${sicherungFaellig()?`<div class="karte hinweis"><b>💾 Spielstand sichern</b><p class="klein">Letzte Sicherung: ${S.gesichert?datum(S.gesichert):"noch nie"}. Schick dir einen Sicherungslink, dann ist dein Stand auch nach dem Löschen der Browserdaten oder auf einem neuen Handy wieder da.</p><button class="haupt" onclick="linkTeilen()">🔗 Sicherungslink senden</button></div>`:""}
+ ${ranglisteKarte()}
  ${installHinweis()}
  <h2>Welten</h2><div class="welten">${WELTEN.map(w=>`<div class="welt"><b>${w.i} ${w.n} ${S.medaille[w.id]?'<span class="gold">🏅</span>':""}</b><span class="klein">${w.t}</span><div class="balken"><i style="width:${weltStand(w.id)}%"></i></div><span class="klein">${weltStand(w.id)} % sicher</span><div class="reihe"><button class="${S.kurs[w.id]?"":"offen"}" onclick="kurs(${w.id})">📘 Crashkurs${S.kurs[w.id]?" ✓":""}</button><button onclick="lektion(${w.id})">Lektion</button><button onclick="boss(${w.id})">👑 Boss</button></div></div>`).join("")}</div>
  <h2>Erfolge</h2><div class="abz">${ERFOLGE.map(e=>`<div class="${S.erfolge[e[0]]?"hat":""}">${S.erfolge[e[0]]?"🏆":"🔒"} <b>${e[1]}</b><br>${e[2]}</div>`).join("")}</div>
- <p class="klein" style="margin-top:24px">Dein Stand wird auf diesem Gerät gespeichert. Mit einem Sicherungslink holst du ihn jederzeit zurück. Stand der Fakten: November 2026. Gesetze vor echten Entscheidungen nachprüfen.</p>`;
+ <p class="klein" style="margin-top:24px">${konto?"Dein Stand wird automatisch in deinem Konto gesichert.":"Dein Stand wird auf diesem Gerät gespeichert. Mit einem Sicherungslink holst du ihn jederzeit zurück."} Stand der Fakten: November 2026. Gesetze vor echten Entscheidungen nachprüfen.</p>`;
 }
 
 /* ---------- Installieren ---------- */
@@ -409,6 +422,8 @@ function dateiLaden(){
 function sicherung(){
  ansicht="sicherung";runde=null;
  app.innerHTML=`<div class="kopf"><button onclick="start()">← Übersicht</button></div>
+ ${konto?`<div class="karte"><h2 style="margin-top:0">☁️ Dein Konto</h2><p>Angemeldet als <b>${esc(konto.name)}</b>. Dein Stand wird nach jeder Runde automatisch online gesichert und ist auf jedem Gerät da, auf dem du dich mit deinem Zugangscode anmeldest.</p><p class="klein">Status: <span id="syncchip">${syncText()}</span></p><div class="reihe"><button onclick="nameAendern()">✏️ Name ändern</button><button onclick="abmelden()">Abmelden</button></div></div>`
+ :`<div class="karte"><h2 style="margin-top:0">🔑 Konto</h2><p>Mit einem Zugangscode wird dein Stand automatisch online gesichert, und du siehst die Team-Rangliste.</p><button class="haupt" onclick="anmeldung()">Mit Zugangscode anmelden</button></div>`}
  <div class="karte"><h2 style="margin-top:0">💾 Spielstand sichern</h2>
  <p>Dein Stand liegt auf diesem Gerät. Damit er nach dem Löschen der Browserdaten oder auf einem neuen Handy wieder da ist, schick dir einen <b>Sicherungslink</b>, zum Beispiel per WhatsApp an dich selbst oder in eine Notiz.</p>
  <div class="reihe"><button class="haupt" onclick="linkTeilen()">🔗 Sicherungslink senden</button><button onclick="dateiSichern()">📄 Als Datei speichern</button></div>
@@ -421,10 +436,104 @@ function sicherung(){
  window.scrollTo(0,0);
 }
 
+/* ---------- Konto und Team-Rangliste ---------- */
+let syncTimer=null,syncStatus="ok",team=null;
+const FS_BASIS=`https://firestore.googleapis.com/v1/projects/${CLOUD.projekt}/databases/(default)/documents`;
+const wert=f=>f?(f.stringValue!==undefined?f.stringValue:f.integerValue!==undefined?+f.integerValue:undefined):undefined;
+const normCode=s=>String(s||"").toUpperCase().replace(/[^A-Z0-9]/g,"").replace(/^IMMO(?=[A-Z0-9]{8}$)/,"");
+const ohneKontoGewaehlt=()=>{try{return localStorage.getItem(KEY+"_ohne")==="1"}catch(e){return false}};
+function kontoSpeichern(){try{konto?localStorage.setItem(KEY+"_konto",JSON.stringify(konto)):localStorage.removeItem(KEY+"_konto")}catch(e){}}
+function syncText(){return syncStatus==="ok"?"☁️ gesichert":syncStatus==="laeuft"?"☁️ speichert …":"⚠️ offline"}
+function syncAnzeigen(s){syncStatus=s;document.querySelectorAll("#syncchip").forEach(el=>el.textContent=syncText())}
+async function fsAnfrage(pfad,opt={},query=""){
+ const q=[query,CLOUD.key?"key="+CLOUD.key:""].filter(Boolean).join("&");
+ const ctl=new AbortController(),t=setTimeout(()=>ctl.abort(),10000);
+ try{
+  const r=await fetch(`${FS_BASIS}/${pfad}${q?"?"+q:""}`,Object.assign({signal:ctl.signal},opt,opt.body?{headers:{"Content-Type":"application/json"},keepalive:opt.body.length<60000}:{}));
+  if(r.status===403||r.status===404)throw new Error("unbekannt");
+  if(!r.ok)throw new Error("netz");
+  return await r.json();
+ }finally{clearTimeout(t)}
+}
+async function kontoLesen(code){const d=await fsAnfrage(`konten/${code}`),f=d.fields||{};return{name:wert(f.name)||"",team:wert(f.team),slot:wert(f.slot),stand:wert(f.stand)||"",geaendert:wert(f.geaendert)||0}}
+function syncPlanen(){clearTimeout(syncTimer);syncAnzeigen("laeuft");syncTimer=setTimeout(hochladen,1200)}
+async function hochladen(){
+ clearTimeout(syncTimer);if(!konto)return;
+ const lv=level(),zahl=n=>({integerValue:String(n||0)});
+ try{
+  await fsAnfrage(`konten/${konto.code}`,{method:"PATCH",body:JSON.stringify({fields:{stand:{stringValue:JSON.stringify(S)},geaendert:zahl(S.geaendert),name:{stringValue:konto.name}}})},"updateMask.fieldPaths=stand&updateMask.fieldPaths=geaendert&updateMask.fieldPaths=name&currentDocument.exists=true");
+  await fsAnfrage(`teams/${konto.team}/rangliste/${konto.slot}`,{method:"PATCH",body:JSON.stringify({fields:{name:{stringValue:konto.name},xp:zahl(S.xp),stufe:zahl(lv+1),level:{stringValue:LEVEL[lv][1]},bosse:zahl(Object.keys(S.medaille).length),kurse:zahl(Object.keys(S.kurs).length),serie:zahl(S.serie),aktiv:{stringValue:heute()}}})});
+  syncAnzeigen("ok");ranglisteLaden();
+ }catch(e){syncAnzeigen("offline")}
+}
+async function herunterladen(){
+ if(!konto)return;
+ try{
+  const d=await kontoLesen(konto.code),r=d.stand?JSON.parse(d.stand):null;
+  if(d.name&&d.name!==konto.name){konto.name=d.name;kontoSpeichern()}
+  if(r&&(r.geaendert||0)>(S.geaendert||0)){S=Object.assign(neuerStand(),r);speichern(true);syncAnzeigen("ok");if(ansicht==="start"||ansicht==="sicherung")zurueck()}
+  else if(!r||(S.geaendert||0)>(r.geaendert||0))await hochladen();
+  else syncAnzeigen("ok");
+ }catch(e){
+  if(e.message==="unbekannt"){konto=null;kontoSpeichern();alert("Dein Zugangscode gilt nicht mehr. Du spielst ohne Konto weiter, dein Stand bleibt auf diesem Gerät.");start();return}
+  syncAnzeigen("offline");
+ }
+ ranglisteLaden();
+}
+async function ranglisteLaden(){
+ if(!konto)return;
+ try{
+  const d=await fsAnfrage(`teams/${konto.team}/rangliste`);
+  team=(d.documents||[]).map(x=>{const f=x.fields||{};return{slot:x.name.split("/").pop(),name:wert(f.name)||"?",xp:wert(f.xp)||0,stufe:wert(f.stufe)||1,level:wert(f.level)||"",bosse:wert(f.bosse)||0,kurse:wert(f.kurse)||0,serie:wert(f.serie)||0,aktiv:wert(f.aktiv)||""}}).sort((a,b)=>b.xp-a.xp);
+  const el=document.getElementById("rangliste");if(el)el.outerHTML=ranglisteKarte();
+ }catch(e){}
+}
+function ranglisteKarte(){
+ if(!konto)return"";
+ const zeilen=(team||[]).map((p,i)=>{const du=p.slot===konto.slot,a=p.aktiv===heute()?"heute":p.aktiv===plus(-1)?"gestern":datum(p.aktiv);
+  return`<div class="rang${du?" du":""}"><span class="platz">${["🥇","🥈","🥉"][i]||i+1}</span><span class="rname"><b>${esc(p.name)}${du?" (du)":""}</b><br><span class="klein">Level ${p.stufe}: ${esc(p.level)} · 🏅 ${p.bosse} · 📘 ${p.kurse} · 🔥 ${p.serie}${a?` · aktiv ${a}`:""}</span></span><span class="rxp">${p.xp} XP</span></div>`}).join("");
+ return`<div class="karte" id="rangliste"><b>🏆 Team-Rangliste</b>${team?(zeilen||`<p class="klein">Noch hat niemand gespielt.</p>`):`<p class="klein">Wird geladen …</p>`}</div>`;
+}
+function anmeldung(fehler=""){
+ ansicht="anmeldung";runde=null;
+ app.innerHTML=`<div class="kopf"><h1>🏠 Immobilien-Akademie</h1></div>
+ <div class="karte"><h2 style="margin-top:0">🔑 Anmelden</h2><p>Gib deinen Zugangscode ein. Dann ist dein Stand auf jedem Handy da, wird automatisch online gesichert, und du siehst die Team-Rangliste.</p>
+ <div class="reihe"><input class="breit" id="zcode" placeholder="IMMO-XXXX-XXXX" autocapitalize="characters" autocomplete="off" spellcheck="false" aria-label="Zugangscode"><button class="haupt" id="zok">Anmelden</button></div>
+ ${fehler?`<p class="fehler">${fehler}</p>`:""}</div>
+ <div class="karte"><b>Kein Code?</b><p class="klein">Du kannst auch ohne Konto spielen. Dann liegt dein Stand nur auf diesem Gerät.</p><button onclick="ohneKonto()">Ohne Konto spielen</button></div>`;
+ const ein=document.getElementById("zcode"),ok=document.getElementById("zok");
+ ok.onclick=()=>anmelden(ein.value);ein.onkeydown=e=>{if(e.key==="Enter")anmelden(ein.value)};
+}
+function ohneKonto(){try{localStorage.setItem(KEY+"_ohne","1")}catch(e){}start()}
+async function anmelden(eingabe){
+ const code=normCode(eingabe);
+ if(code.length!==8)return anmeldung("Der Code hat nach „IMMO“ acht Zeichen, zum Beispiel IMMO-AB2C-D3EF.");
+ const ok=document.getElementById("zok");if(ok){ok.disabled=true;ok.textContent="Prüfe …"}
+ let d;try{d=await kontoLesen(code)}catch(e){return anmeldung(e.message==="unbekannt"?"Diesen Zugangscode gibt es nicht. Prüf die Schreibweise.":"Keine Verbindung. Prüf dein Internet und versuch es nochmal.")}
+ const r=d.stand?JSON.parse(d.stand):null;
+ if(r&&S.xp>r.xp&&confirm(`Auf diesem Gerät hast du ${S.xp} XP, in deinem Konto ${r.xp} XP. Den höheren Stand von diesem Gerät ins Konto übernehmen?`)){}
+ else if(!r&&S.xp>0&&confirm(`Deinen bisherigen Stand (${S.xp} XP) in dein Konto übernehmen?`)){}
+ else S=Object.assign(neuerStand(),r||{});
+ konto={code,name:d.name,team:d.team,slot:d.slot};
+ if(!konto.name){const n=prompt("Wie heißt du? Der Name erscheint in der Team-Rangliste.","");konto.name=(n||"").trim().slice(0,20)||"Mitspieler"}
+ kontoSpeichern();try{localStorage.removeItem(KEY+"_ohne")}catch(e){}
+ speichern();team=null;start();hochladen();
+}
+function nameAendern(){const n=prompt("Dein Name in der Team-Rangliste:",konto.name);if(n===null)return;konto.name=n.trim().slice(0,20)||konto.name;kontoSpeichern();sicherung();hochladen()}
+async function abmelden(){
+ if(!confirm("Abmelden? Dein Stand bleibt in deinem Konto. Auf diesem Gerät wird er entfernt, bis du dich wieder anmeldest."))return;
+ await hochladen();
+ if(syncStatus!=="ok"&&!confirm("Der letzte Stand konnte nicht hochgeladen werden, weil keine Verbindung besteht. Trotzdem abmelden? Dann fehlt der Fortschritt seit der letzten Sicherung."))return;
+ konto=null;team=null;kontoSpeichern();S=neuerStand();speichern(true);anmeldung();
+}
+window.addEventListener("online",()=>{if(konto&&syncStatus==="offline")hochladen()});
+document.addEventListener("visibilitychange",()=>{if(!konto)return;if(document.visibilityState==="hidden"){if(syncStatus==="laeuft")hochladen()}else if(ansicht==="start")herunterladen()});
+
 /* ---------- Start ---------- */
 if("serviceWorker" in navigator&&(location.protocol==="https:"||location.hostname==="localhost"))navigator.serviceWorker.register("sw.js").catch(()=>{});
 const h=location.hash.match(/stand=([\w-]+)/);
-start();
+if(!konto&&!ohneKontoGewaehlt()&&!h)anmeldung();else start();
+if(konto)herunterladen();
 if(h){history.replaceState(null,"",location.pathname+location.search);setTimeout(()=>codeLaden(h[1]),300)}
 </script>
 </body>
