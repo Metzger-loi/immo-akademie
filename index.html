@@ -65,6 +65,19 @@ input{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(-
 .platz{width:28px;text-align:center;font-size:1.2rem}
 .rname{flex:1;min-width:0}
 .rxp{font-weight:700;white-space:nowrap}
+.rechner{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--card);border-top:1px solid var(--linie);box-shadow:0 -8px 28px rgba(0,0,0,.22);padding:10px 16px max(10px,env(safe-area-inset-bottom));border-radius:16px 16px 0 0}
+.rechner[hidden]{display:none}
+.rechner-innen{max-width:420px;margin:0 auto}
+.r-kopf{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.r-kopf button{min-height:36px;padding:4px 10px}
+.r-anzeige{background:var(--bg);border:1px solid var(--linie);border-radius:10px;padding:6px 12px;text-align:right;margin-bottom:8px}
+.r-term{color:var(--leise);font-size:.95rem;min-height:1.4em;overflow-wrap:anywhere}
+.r-wert{font-size:1.6rem;font-weight:700;overflow-wrap:anywhere}
+.r-tasten{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+.r-tasten button{min-height:46px;font-size:1.15rem;padding:4px}
+.r-tasten button.op{background:color-mix(in srgb,var(--akzent) 9%,var(--card))}
+.r-tasten .r-breit{grid-column:span 2}
+body.mit-rechner main{padding-bottom:470px}
 .abz{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
 .abz div{border:1px dashed var(--linie);border-radius:10px;padding:8px 10px;font-size:.9rem;color:var(--leise)}
 .abz div.hat{border-style:solid;color:var(--text)}
@@ -282,7 +295,7 @@ function neueErfolge(){const m=Object.keys(S.medaille).length,k=Object.keys(S.ku
 function sicherungFaellig(){return !konto&&S.xp>0&&(!S.gesichert||tage(S.gesichert,heute())>=7||S.xp-(S.gesichertXp||0)>=150)}
 
 function start(){
- ansicht="start";runde=null;
+ ansicht="start";rechnerZu();runde=null;
  if(S.tag.d!==heute())S.tag={d:heute(),xp:0};
  const lv=level(),nx=LEVEL[lv+1],vor=LEVEL[lv][0],pr=nx?Math.round((S.xp-vor)/(nx[0]-vor)*100):100,f=faellig().length;
  app.innerHTML=`<div class="kopf"><h1>🏠 Immobilien-Akademie</h1><div class="reihe">${konto?`<span class="chip" id="syncchip">${syncText()}</span>`:""}<span class="chip">🔥 ${S.serie} Tage</span><span class="chip">⭐ ${S.xp} XP</span></div></div>
@@ -311,7 +324,7 @@ async function installieren(){if(!installEvt)return;installEvt.prompt();try{awai
 
 /* ---------- Crashkurs ---------- */
 function kurs(w,nr=0){
- ansicht="kurs";runde=null;
+ ansicht="kurs";rechnerZu();runde=null;
  const L=KURS[w],c=L[nr],W=WELTEN[w-1];
  app.innerHTML=`<div class="kopf"><button onclick="start()">← Übersicht</button><span class="chip">📘 Crashkurs · ${nr+1} / ${L.length}</span></div><div class="balken"><i style="width:${(nr+1)/L.length*100}%"></i></div>
  <div class="karte" id="kurskarte"><span class="klein">${W.i} ${W.n}</span><h2 style="margin-top:6px">${c.t}</h2>
@@ -327,7 +340,7 @@ function kurs(w,nr=0){
   if(Math.abs(dx)>60&&Math.abs(dx)>Math.abs(dy)*1.5){if(dx<0)(nr<L.length-1?kurs(w,nr+1):kursFertig(w));else if(nr>0)kurs(w,nr-1)}},{passive:true});
 }
 function kursFertig(w){
- ansicht="kursende";const W=WELTEN[w-1],erst=!S.kurs[w];
+ ansicht="kursende";rechnerZu();const W=WELTEN[w-1],erst=!S.kurs[w];
  if(erst){S.kurs[w]=heute();xpBuchen(KURS_XP)}
  const neu=neueErfolge();speichern();
  app.innerHTML=`<div class="karte" style="text-align:center"><div class="gross">🎓</div><h2 style="margin-top:4px">Crashkurs ${W.n} geschafft!</h2>${erst?`<p><b>+${KURS_XP} XP</b></p>`:""}${neu.map(n=>`<p>🏆 Neuer Erfolg: <b>${n}</b></p>`).join("")}
@@ -348,24 +361,28 @@ function boss(w){runde={typ:"boss",w,liste:aufgaben(Q.map((q,i)=>i).filter(i=>Q[
 function frage(){
  ansicht="frage";
  const a=runde.liste[runde.nr],kopf=`<div class="kopf"><button onclick="start()">← Übersicht</button><span class="chip">${runde.typ==="boss"?"👑 Boss · ":""}Frage ${runde.nr+1} / ${runde.liste.length}${runde.combo>=3?` · 🔥 Combo ×${runde.combo}`:""}</span></div><div class="balken"><i style="width:${runde.nr/runde.liste.length*100}%"></i></div>`;
- const tippZeile=`<div style="margin-top:10px"><button class="tippknopf" id="tipp">💡 Tipp anzeigen (halbe XP)</button><div id="tippbox"></div></div>`;
- if(a.t==="q"){const q=Q[a.i],ord=mischen([0,1,2,3]);
+ const tippKnopf=`<button class="tippknopf" id="tipp">💡 Tipp anzeigen (halbe XP)</button>`;
+ const tippZeile=`<div style="margin-top:10px">${tippKnopf}<div id="tippbox"></div></div>`;
+ const rechenZeile=`<div style="margin-top:10px"><div class="reihe">${tippKnopf}<button class="tippknopf" id="rechnerknopf">🧮 Taschenrechner</button></div><div id="tippbox"></div></div>`;
+ if(a.t==="q"){rechnerZu(true);const q=Q[a.i],ord=mischen([0,1,2,3]);
   app.innerHTML=kopf+`<div class="karte"><span class="klein">${WELTEN[q[0]-1].i} ${WELTEN[q[0]-1].n}</span><h2 style="margin-top:6px">${q[1]}</h2>${tippZeile}<div class="antworten">${ord.map(o=>`<button data-o="${o}">${q[2][o]}</button>`).join("")}</div><div id="fb"></div></div>`;
   app.querySelectorAll(".antworten button").forEach(b=>b.onclick=()=>antwort(+b.dataset.o===q[3],b,q[4],a));
  }else{const r=a.r;
-  app.innerHTML=kopf+`<div class="karte"><span class="klein">🧮 Rechenaufgabe</span><h2 style="margin-top:6px">${r.q}</h2><p class="klein" style="margin-top:-4px">Gib das Ergebnis ${stellen(r.p,r.u)} an.</p>${tippZeile}<div class="reihe" style="margin-top:12px"><input id="ein" inputmode="decimal" placeholder="Ergebnis${r.u?" in "+r.u:""}" aria-label="Ergebnis"><button class="haupt" id="ok">Prüfen</button></div><div id="fb"></div></div>`;
+  app.innerHTML=kopf+`<div class="karte"><span class="klein">🧮 Rechenaufgabe</span><h2 style="margin-top:6px">${r.q}</h2><p class="klein" style="margin-top:-4px">Gib das Ergebnis ${stellen(r.p,r.u)} an.</p>${rechenZeile}<div class="reihe" style="margin-top:12px"><input id="ein" inputmode="decimal" placeholder="Ergebnis${r.u?" in "+r.u:""}" aria-label="Ergebnis"><button class="haupt" id="ok">Prüfen</button></div><div id="fb"></div></div>`;
   const ein=document.getElementById("ein");if(!matchMedia("(pointer:coarse)").matches)ein.focus();
   const pruef=()=>{const v=zahlLesen(ein.value,r.p);if(isNaN(v))return;const st=bewerten(v,r);ein.classList.add(st);
    const genau=r.u==="€"&&Math.abs(rund(r.a,r.p)-r.a)>.004?` (genau ${zeig(r.a,2,"€")})`:"";
    let hin="";if(st==="fast"){const ab=Math.abs(v-r.a)/Math.max(Math.abs(r.a),1e-9)*100;hin=rund(v,r.p)===rund(r.a,r.p)?`Gerundet wäre es genau richtig. Achte aufs Runden (${stellen(r.p,r.u)}). `:`Du liegst ${ab<1?"weniger als 1":Math.round(ab)} % daneben. Meist steckt ein Rundungsfehler im Zwischenergebnis. `}
    antwort(st==="richtig",null,`${hin}Deine Eingabe: ${esc(ein.value.trim())} · Lösung: ${zeig(r.a,r.p,r.u)}${genau}. ${r.e}`,a,st==="fast")};
   document.getElementById("ok").onclick=pruef;ein.onkeydown=e=>{if(e.key==="Enter")pruef()};
+  document.getElementById("rechnerknopf").onclick=()=>rechnerAuf();
+  if(rechnerOffen)rechnerAuf();
  }
  document.getElementById("tipp").onclick=function(){a.tipp=true;this.disabled=true;document.getElementById("tippbox").innerHTML=`<div class="tipp">💡 ${a.t==="q"?Q[a.i][5]:a.r.h}</div>`};
  window.scrollTo(0,0);
 }
 function antwort(gut,knopf,erkl,a,fast=false){
- app.querySelectorAll(".antworten button,#ok,#ein,#tipp").forEach(b=>b.disabled=true);
+ app.querySelectorAll(".antworten button,#ok,#ein,#tipp,#rechnerknopf").forEach(b=>b.disabled=true);rechnerZu(true);
  if(a.t==="q"){const q=Q[a.i];app.querySelectorAll(".antworten button").forEach(b=>{if(+b.dataset.o===q[3])b.classList.add("richtig")});if(!gut&&knopf)knopf.classList.add("falsch");
   const k=S.k[a.i]||[0,heute()];k[0]=gut?Math.min(k[0]+1,5):1;k[1]=plus(ABST[k[0]]);S.k[a.i]=k;}
  let x=0;
@@ -377,7 +394,7 @@ function antwort(gut,knopf,erkl,a,fast=false){
  w.onclick=()=>{runde.nr++;runde.nr<runde.liste.length?frage():ende()};
 }
 function ende(){
- ansicht="ende";
+ ansicht="ende";rechnerZu();
  const lvAlt=level(),quote=Math.round(runde.gut/runde.liste.length*100);let extra="";
  if(runde.typ==="boss"&&quote>=80&&!S.medaille[runde.w]){S.medaille[runde.w]=heute();runde.xp+=50;extra=`<p class="gold"><b>🏅 Boss besiegt! +50 XP</b></p>`}
  xpBuchen(runde.xp);
@@ -390,6 +407,62 @@ function ende(){
  ${sicherungFaellig()?`<div class="karte hinweis"><b>💾 Denk an deine Sicherung</b><p class="klein">Ein Sicherungslink an dich selbst dauert fünf Sekunden und rettet deinen Stand, falls Browserdaten gelöscht werden.</p><button class="haupt" onclick="linkTeilen()">🔗 Sicherungslink senden</button></div>`:""}`;
  window.scrollTo(0,0);
 }
+
+/* ---------- Taschenrechner ---------- */
+let rechnerOffen=false,rTerm="",rFertig=false;
+const zahlText=(w,gruppe)=>(Math.abs(w)<1e-12?0:w).toLocaleString("de-DE",{maximumFractionDigits:6,useGrouping:!!gruppe}).replace("-","−");
+function rechnerAuf(){
+ let el=document.getElementById("rechner");
+ if(!el){
+  el=document.createElement("div");el.id="rechner";el.className="rechner";el.setAttribute("role","dialog");el.setAttribute("aria-label","Taschenrechner");
+  el.innerHTML=`<div class="rechner-innen"><div class="r-kopf"><b>🧮 Taschenrechner</b><button class="tippknopf" data-t="zu" aria-label="Taschenrechner schließen">✕ Schließen</button></div>
+  <div class="r-anzeige"><div class="r-term" id="rterm"></div><div class="r-wert" id="rwert">0</div></div>
+  <div class="r-tasten">${["C","(",")","⌫","7","8","9","÷","4","5","6","×","1","2","3","−","0",",","%","+"].map(t=>`<button data-t="${t}"${/[0-9,]/.test(t)?"":' class="op"'}>${t}</button>`).join("")}
+  <button data-t="=" class="op r-breit">=</button><button data-t="ok" class="haupt r-breit">Übernehmen</button></div>
+  <p class="klein" style="margin:6px 0 0;text-align:center">Punkt vor Strich · % teilt durch 100 · „Übernehmen“ setzt das Ergebnis ins Antwortfeld</p></div>`;
+  document.body.appendChild(el);
+  el.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>rechnerTaste(b.dataset.t));
+ }
+ el.hidden=false;rechnerOffen=true;document.body.classList.add("mit-rechner");rTerm="";rFertig=false;rechnerZeigen();
+}
+function rechnerZu(behalten){const el=document.getElementById("rechner");if(el)el.hidden=true;document.body.classList.remove("mit-rechner");if(!behalten)rechnerOffen=false}
+function rechnerTaste(t){
+ if(t==="zu")return rechnerZu();
+ if(t==="ok"){const w=rechnen(rTerm),ein=document.getElementById("ein");if(w!==null&&ein&&!ein.disabled){ein.value=zahlText(w);rechnerZu(true);ein.scrollIntoView({block:"center",behavior:"smooth"})}return}
+ if(t==="C"){rTerm="";rFertig=false}
+ else if(t==="⌫"){rTerm=rFertig?"":rTerm.slice(0,-1);rFertig=false}
+ else if(t==="="){const w=rechnen(rTerm);if(w!==null){rTerm=zahlText(w);rFertig=true}}
+ else{
+  if(rFertig&&/[0-9,(]/.test(t))rTerm="";
+  rFertig=false;const letzt=rTerm.slice(-1);
+  if("+×÷".includes(t)){if(!rTerm||letzt==="(")return;if("+−×÷".includes(letzt))rTerm=rTerm.slice(0,-1)}
+  if(t==="−"&&"+−".includes(letzt)&&letzt!=="")rTerm=rTerm.slice(0,-1);
+  if(t===","){const z=rTerm.match(/[0-9,]*$/)[0];if(z.includes(","))return;if(!z)rTerm+="0"}
+  if(t==="%"&&!/[0-9)]/.test(letzt))return;
+  if(t===")"){const auf=(rTerm.match(/\(/g)||[]).length,zu=(rTerm.match(/\)/g)||[]).length;if(auf<=zu||!/[0-9)%]/.test(letzt))return}
+  if(t==="("&&/[0-9)%]/.test(letzt))rTerm+="×";
+  rTerm+=t;
+ }
+ rechnerZeigen();
+}
+function rechnerZeigen(){const w=rechnen(rTerm);document.getElementById("rterm").textContent=rFertig?"Ergebnis":rTerm;document.getElementById("rwert").textContent=rTerm?(w===null?"…":zahlText(w,true)):"0"}
+/* Rechnet einen Term mit + − × ÷, Klammern und % (ohne eval). Offene Klammern werden geschlossen. */
+function rechnen(term){
+ let s=String(term).replace(/[+−×÷(]+$/,"");if(!s)return null;
+ s+=")".repeat(Math.max(0,(s.match(/\(/g)||[]).length-(s.match(/\)/g)||[]).length));
+ let i=0;
+ const zahl=()=>{const m=s.slice(i).match(/^(\d+(,\d*)?|,\d+)/);if(!m)throw 0;i+=m[0].length;return parseFloat(m[0].replace(",","."))};
+ const einzeln=()=>{let v;if(s[i]==="("){i++;v=summe();if(s[i]!==")")throw 0;i++}else v=zahl();while(s[i]==="%"){v/=100;i++}return v};
+ const faktor=()=>{if(s[i]==="−"){i++;return -faktor()}if(s[i]==="+"){i++;return faktor()}return einzeln()};
+ const produkt=()=>{let v=faktor();while(s[i]==="×"||s[i]==="÷"){const o=s[i++],w=faktor();v=o==="×"?v*w:v/w}return v};
+ const summe=()=>{let v=produkt();while(s[i]==="+"||s[i]==="−"){const o=s[i++],w=produkt();v=o==="+"?v+w:v-w}return v};
+ try{const v=summe();return i===s.length&&isFinite(v)?v:null}catch(e){return null}
+}
+document.addEventListener("keydown",e=>{
+ const el=document.getElementById("rechner");if(!el||el.hidden||(e.target&&e.target.tagName==="INPUT"))return;
+ const t=/^[0-9]$/.test(e.key)?e.key:{"*":"×","x":"×","/":"÷","-":"−","+":"+",".":",",",":",","Enter":"=","=":"=","Backspace":"⌫","Delete":"C","Escape":"zu","(":"(",")":")","%":"%"}[e.key];
+ if(!t)return;e.preventDefault();rechnerTaste(t);
+});
 
 /* ---------- Sichern und Laden ---------- */
 const b64u=s=>btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
@@ -439,7 +512,7 @@ function dateiLaden(){
  i.click();
 }
 function sicherung(){
- ansicht="sicherung";runde=null;
+ ansicht="sicherung";rechnerZu();runde=null;
  app.innerHTML=`<div class="kopf"><button onclick="start()">← Übersicht</button></div>
  ${konto?`<div class="karte"><h2 style="margin-top:0">☁️ Dein Konto</h2><p>Angemeldet als <b>${esc(konto.name)}</b>. Dein Stand wird nach jeder Runde automatisch online gesichert und ist auf jedem Gerät da, auf dem du dich mit deinem Zugangscode anmeldest.</p><p class="klein">Status: <span id="syncchip">${syncText()}</span></p><div class="reihe"><button onclick="nameAendern()">✏️ Name ändern</button><button onclick="abmelden()">Abmelden</button></div></div>`
  :`<div class="karte"><h2 style="margin-top:0">🔑 Konto</h2><p>Mit einem Zugangscode wird dein Stand automatisch online gesichert, und du siehst die Team-Rangliste.</p><button class="haupt" onclick="anmeldung()">Mit Zugangscode anmelden</button></div>`}
@@ -514,7 +587,7 @@ function ranglisteKarte(){
  return`<div class="karte" id="rangliste"><b>🏆 Team-Rangliste</b>${team?(zeilen||`<p class="klein">Noch hat niemand gespielt.</p>`):`<p class="klein">Wird geladen …</p>`}</div>`;
 }
 function anmeldung(fehler=""){
- ansicht="anmeldung";runde=null;
+ ansicht="anmeldung";rechnerZu();runde=null;
  app.innerHTML=`<div class="kopf"><h1>🏠 Immobilien-Akademie</h1></div>
  <div class="karte"><h2 style="margin-top:0">🔑 Anmelden</h2><p>Gib deinen Zugangscode ein. Dann ist dein Stand auf jedem Handy da, wird automatisch online gesichert, und du siehst die Team-Rangliste.</p>
  <div class="reihe"><input class="breit" id="zcode" placeholder="IMMO-XXXX-XXXX" autocapitalize="characters" autocomplete="off" spellcheck="false" aria-label="Zugangscode"><button class="haupt" id="zok">Anmelden</button></div>
