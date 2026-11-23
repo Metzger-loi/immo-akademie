@@ -45,8 +45,10 @@ button.tippknopf{border-style:dashed;border-color:color-mix(in srgb,var(--gold) 
 .antworten{display:grid;gap:8px;margin-top:12px}
 .antworten button{text-align:left;padding:12px 14px;min-height:56px;font-size:1.02rem}
 .richtig{border-color:var(--gut)!important;background:color-mix(in srgb,var(--gut) 15%,var(--card))!important}
+.fast{border-color:var(--gold)!important;background:color-mix(in srgb,var(--gold) 15%,var(--card))!important}
 .falsch{border-color:var(--schlecht)!important;background:color-mix(in srgb,var(--schlecht) 13%,var(--card))!important}
 .erkl{margin-top:12px;padding:12px;border-radius:10px;border-left:4px solid var(--akzent);background:var(--bg)}
+.erkl-gut{border-left-color:var(--gut)}.erkl-fast{border-left-color:var(--gold)}
 .tipp{margin-top:10px;padding:10px 12px;border-radius:10px;background:color-mix(in srgb,var(--gold) 13%,var(--card));border:1px solid color-mix(in srgb,var(--gold) 45%,var(--linie))}
 .formel{margin:12px 0;padding:12px 14px;border-radius:10px;background:color-mix(in srgb,var(--akzent) 8%,var(--card));border:1px solid color-mix(in srgb,var(--akzent) 30%,var(--linie));font-weight:600}
 .formel div+div{margin-top:6px;padding-top:6px;border-top:1px dashed color-mix(in srgb,var(--akzent) 30%,var(--linie))}
@@ -224,15 +226,27 @@ const Q=[
 
 const R=(a,b,s=1)=>Math.round((a+Math.random()*(b-a))/s)*s, EUR=x=>Math.round(x).toLocaleString("de-DE")+" €", K=x=>String(x).replace(".",",");
 const RECHNEN=[
- ()=>{const kp=R(300000,1500000,10000),m=R(1500,9000,50);return{q:`Kaufpreis ${EUR(kp)}, Kaltmiete ${EUR(m)} im Monat. Wie hoch ist der Kaufpreisfaktor? (eine Nachkommastelle)`,a:kp/(m*12),u:"",tol:.06,e:`${EUR(kp)} ÷ (${EUR(m)} × 12) = ${K((kp/(m*12)).toFixed(1))}`,h:"Faktor = Kaufpreis ÷ (Monatsmiete × 12)"}},
- ()=>{const kp=R(300000,1500000,10000),m=R(1500,9000,50);return{q:`Kaufpreis ${EUR(kp)}, Kaltmiete ${EUR(m)} im Monat. Wie hoch ist die Bruttomietrendite in %? (eine Nachkommastelle)`,a:m*12/kp*100,u:"%",tol:.06,e:`${EUR(m*12)} ÷ ${EUR(kp)} × 100`,h:"Bruttorendite = Jahreskaltmiete ÷ Kaufpreis × 100"}},
- ()=>{const kp=R(200000,1200000,10000),mk=Math.random()<.5;return{q:`Kaufpreis ${EUR(kp)} in Hessen, ${mk?"mit 3,57 % Makler":"ohne Makler"}. Wie hoch sind die Kaufnebenkosten mit 6 % Grunderwerbsteuer und 2 % Notar und Grundbuch?`,a:kp*(mk?.1157:.08),u:"€",tol:.02,e:`${EUR(kp)} × ${mk?"11,57":"8"} %`,h:mk?"Nebenkosten = Kaufpreis × (6 % + 2 % + 3,57 %)":"Nebenkosten = Kaufpreis × (6 % + 2 %)"}},
- ()=>{const d=R(200000,900000,10000),z=R(30,50,1)/10,t=R(10,30,5)/10;return{q:`Darlehen ${EUR(d)}, ${K(z)} % Zins und ${K(t)} % anfängliche Tilgung. Wie hoch ist die Monatsrate?`,a:d*(z+t)/100/12,u:"€",tol:.02,e:`${EUR(d)} × ${K(+(z+t).toFixed(1))} % ÷ 12`,h:"Monatsrate = Darlehen × (Zins + Tilgung) ÷ 100 ÷ 12"}},
- ()=>{const r=R(300,1500,50),z=R(55,70,1)/10;return{q:`Du zahlst eine Autorate von ${EUR(r)} im Monat. Um wie viel weniger Kredit bekommst du für ein Haus bei ${K(z)} % Zins und Tilgung zusammen?`,a:r*12/(z/100),u:"€",tol:.03,e:`${EUR(r)} × 12 ÷ ${K(z)} %`,h:"Weniger Kredit = Monatsrate × 12 ÷ (Zins und Tilgung in Prozent ÷ 100)"}},
- ()=>{const m=R(2000,8000,100),rate=R(1000,5000,100),k=R(200,900,50);return{q:`Kaltmiete ${EUR(m)}, Bankrate ${EUR(rate)} und nicht umlegbare Kosten ${EUR(k)} im Monat. Wie hoch ist der monatliche Cashflow?`,a:m-rate-k,u:"€",tol:.01,e:`${EUR(m)} − ${EUR(rate)} − ${EUR(k)}`,h:"Cashflow = Kaltmiete − Bankrate − nicht umlegbare Kosten (kann auch negativ sein)"}},
- ()=>{const m=R(400,1200,10);return{q:`Die Kaltmiete beträgt ${EUR(m)} im Monat, in der Gemeinde gilt eine Kappungsgrenze von 15 %, und die ortsübliche Vergleichsmiete liegt deutlich höher. Auf wie viel Euro darf die Miete in 3 Jahren höchstens steigen?`,a:m*1.15,u:"€",tol:.01,e:`${EUR(m)} × 1,15, aber nie über die ortsübliche Vergleichsmiete`,h:"Höchstmiete = heutige Miete × 1,15"}},
- ()=>{const g=R(150000,800000,10000);return{q:`Die Anschaffungskosten des Gebäudes (ohne Boden) betragen ${EUR(g)}. Für wie viel Euro (netto) darfst du in den ersten 3 Jahren höchstens sanieren, ohne die 15-%-Grenze zu überschreiten?`,a:g*.15,u:"€",tol:.01,e:`${EUR(g)} × 15 %`,h:"Grenze = Gebäudeanteil × 0,15"}},
- ()=>{const j=R(40000,200000,1000),zi=R(45,60,5)/10;return{q:`Jahreskaltmiete ${EUR(j)}, davon 20 % Bewirtschaftungskosten, Liegenschaftszins ${K(zi)} %. Wie hoch ist der vereinfachte Ertragswert (Reinertrag ÷ Liegenschaftszins, ohne Bodenwert und Restnutzungsdauer)?`,a:j*.8/(zi/100),u:"€",tol:.03,e:`${EUR(j)} × 0,8 ÷ ${K(zi)} % (ohne Bodenwert und Restnutzungsdauer)`,h:"Ertragswert = Jahresmiete × 0,8 ÷ (Zins ÷ 100)"}}];
+ ()=>{const kp=R(300000,1500000,10000),m=R(1500,9000,50);return{q:`Kaufpreis ${EUR(kp)}, Kaltmiete ${EUR(m)} im Monat. Wie hoch ist der Kaufpreisfaktor?`,a:kp/(m*12),u:"",p:1,e:`${EUR(kp)} ÷ (${EUR(m)} × 12) = ${K((kp/(m*12)).toFixed(1))}`,h:"Faktor = Kaufpreis ÷ (Monatsmiete × 12)"}},
+ ()=>{const kp=R(300000,1500000,10000),m=R(1500,9000,50);return{q:`Kaufpreis ${EUR(kp)}, Kaltmiete ${EUR(m)} im Monat. Wie hoch ist die Bruttomietrendite in %?`,a:m*12/kp*100,u:"%",p:1,e:`${EUR(m*12)} ÷ ${EUR(kp)} × 100`,h:"Bruttorendite = Jahreskaltmiete ÷ Kaufpreis × 100"}},
+ ()=>{const kp=R(200000,1200000,10000),mk=Math.random()<.5;return{q:`Kaufpreis ${EUR(kp)} in Hessen, ${mk?"mit 3,57 % Makler":"ohne Makler"}. Wie hoch sind die Kaufnebenkosten mit 6 % Grunderwerbsteuer und 2 % Notar und Grundbuch?`,a:kp*(mk?.1157:.08),u:"€",p:0,e:`${EUR(kp)} × ${mk?"11,57":"8"} %`,h:mk?"Nebenkosten = Kaufpreis × (6 % + 2 % + 3,57 %)":"Nebenkosten = Kaufpreis × (6 % + 2 %)"}},
+ ()=>{const d=R(200000,900000,10000),z=R(30,50,1)/10,t=R(10,30,5)/10;return{q:`Darlehen ${EUR(d)}, ${K(z)} % Zins und ${K(t)} % anfängliche Tilgung. Wie hoch ist die Monatsrate?`,a:d*(z+t)/100/12,u:"€",p:0,e:`${EUR(d)} × ${K(+(z+t).toFixed(1))} % ÷ 12`,h:"Monatsrate = Darlehen × (Zins + Tilgung) ÷ 100 ÷ 12"}},
+ ()=>{const r=R(300,1500,50),z=R(55,70,1)/10;return{q:`Du zahlst eine Autorate von ${EUR(r)} im Monat. Um wie viel weniger Kredit bekommst du für ein Haus bei ${K(z)} % Zins und Tilgung zusammen?`,a:r*12/(z/100),u:"€",p:-2,e:`${EUR(r)} × 12 ÷ ${K(z)} %`,h:"Weniger Kredit = Monatsrate × 12 ÷ (Zins und Tilgung in Prozent ÷ 100)"}},
+ ()=>{const m=R(2000,8000,100),rate=R(1000,5000,100),k=R(200,900,50);return{q:`Kaltmiete ${EUR(m)}, Bankrate ${EUR(rate)} und nicht umlegbare Kosten ${EUR(k)} im Monat. Wie hoch ist der monatliche Cashflow?`,a:m-rate-k,u:"€",p:0,e:`${EUR(m)} − ${EUR(rate)} − ${EUR(k)}`,h:"Cashflow = Kaltmiete − Bankrate − nicht umlegbare Kosten (kann auch negativ sein)"}},
+ ()=>{const m=R(400,1200,10);return{q:`Die Kaltmiete beträgt ${EUR(m)} im Monat, in der Gemeinde gilt eine Kappungsgrenze von 15 %, und die ortsübliche Vergleichsmiete liegt deutlich höher. Auf wie viel Euro darf die Miete in 3 Jahren höchstens steigen?`,a:m*1.15,u:"€",p:0,e:`${EUR(m)} × 1,15, aber nie über die ortsübliche Vergleichsmiete`,h:"Höchstmiete = heutige Miete × 1,15"}},
+ ()=>{const g=R(150000,800000,10000);return{q:`Die Anschaffungskosten des Gebäudes (ohne Boden) betragen ${EUR(g)}. Für wie viel Euro (netto) darfst du in den ersten 3 Jahren höchstens sanieren, ohne die 15-%-Grenze zu überschreiten?`,a:g*.15,u:"€",p:0,e:`${EUR(g)} × 15 %`,h:"Grenze = Gebäudeanteil × 0,15"}},
+ ()=>{const j=R(40000,200000,1000),zi=R(45,60,5)/10;return{q:`Jahreskaltmiete ${EUR(j)}, davon 20 % Bewirtschaftungskosten, Liegenschaftszins ${K(zi)} %. Wie hoch ist der vereinfachte Ertragswert (Reinertrag ÷ Liegenschaftszins, ohne Bodenwert und Restnutzungsdauer)?`,a:j*.8/(zi/100),u:"€",p:-3,e:`${EUR(j)} × 0,8 ÷ ${K(zi)} % (ohne Bodenwert und Restnutzungsdauer)`,h:"Ertragswert = Jahresmiete × 0,8 ÷ (Zins ÷ 100)"}}];
+const rund=(x,p)=>{const f=Math.pow(10,p);return Math.round(x*f)/f};
+const stellen=(p,u)=>p===1?"mit einer Nachkommastelle":p>1?`mit ${p} Nachkommastellen`:p===0?(u==="€"?"auf ganze Euro gerundet":"als ganze Zahl"):`auf ${EUR(Math.pow(10,-p))} gerundet`;
+const zeig=(x,p,u)=>u==="€"?(p>0?x.toLocaleString("de-DE",{minimumFractionDigits:p,maximumFractionDigits:p})+" €":EUR(rund(x,p))):K(x.toFixed(Math.max(p,0)))+(u?" "+u:"");
+function zahlLesen(s,p){s=String(s).replace(/\s|€|%/g,"").replace(/[−–]/g,"-");
+ if(s.includes(","))s=s.replace(/\./g,"").replace(",",".");
+ else{const t=s.split(".");if(t.length===2&&(p>=1||t[1].length!==3))s=t[0]+"."+t[1];else s=s.replace(/\./g,"")}
+ return s===""||s==="-"?NaN:Number(s)}
+/* richtig: genau der gerundete Wert oder genauer; fast: höchstens 5 % daneben; sonst falsch */
+function bewerten(v,r){const a=r.a,e=Math.pow(10,-r.p);
+ if(Math.abs(v-rund(a,r.p))<=1e-9*Math.max(1,Math.abs(a))||Math.abs(v-a)<=e/20)return"richtig";
+ if(Math.abs(v-a)<=Math.max(Math.abs(a)*.05,e*2))return"fast";
+ return"falsch"}
 
 const LEVEL=[[0,"Mieter"],[100,"Hausmeister"],[300,"Kleinvermieter"],[700,"Vermieter"],[1500,"Investor"],[3000,"Projektentwickler"],[6000,"Immobilien-Hai"],[10000,"Hessen-Schocker"]];
 const ERFOLGE=[["erste","Erste Lektion","Eine Lektion beendet"],["serie3","Dranbleiber","3 Tage Serie"],["serie7","Eiserne Woche","7 Tage Serie"],["rechner","Rechenprofi","20 Rechenaufgaben richtig"],["hundert","Hundert richtige","100 richtige Antworten"],["boss","Erster Boss","Eine Bossprüfung bestanden"],["alleboss","Großmeister","Alle 7 Bossprüfungen"],["investor","Investor","Level Investor erreicht"],["kurs","Formelfuchs","Einen Crashkurs abgeschlossen"],["allekurse","Wissensdurst","Alle 7 Crashkurse"]];
@@ -339,21 +353,26 @@ function frage(){
   app.innerHTML=kopf+`<div class="karte"><span class="klein">${WELTEN[q[0]-1].i} ${WELTEN[q[0]-1].n}</span><h2 style="margin-top:6px">${q[1]}</h2>${tippZeile}<div class="antworten">${ord.map(o=>`<button data-o="${o}">${q[2][o]}</button>`).join("")}</div><div id="fb"></div></div>`;
   app.querySelectorAll(".antworten button").forEach(b=>b.onclick=()=>antwort(+b.dataset.o===q[3],b,q[4],a));
  }else{const r=a.r;
-  app.innerHTML=kopf+`<div class="karte"><span class="klein">🧮 Rechenaufgabe</span><h2 style="margin-top:6px">${r.q}</h2>${tippZeile}<div class="reihe" style="margin-top:12px"><input id="ein" inputmode="decimal" placeholder="Ergebnis ${r.u}" aria-label="Ergebnis"><button class="haupt" id="ok">Prüfen</button></div><div id="fb"></div></div>`;
+  app.innerHTML=kopf+`<div class="karte"><span class="klein">🧮 Rechenaufgabe</span><h2 style="margin-top:6px">${r.q}</h2><p class="klein" style="margin-top:-4px">Gib das Ergebnis ${stellen(r.p,r.u)} an.</p>${tippZeile}<div class="reihe" style="margin-top:12px"><input id="ein" inputmode="decimal" placeholder="Ergebnis${r.u?" in "+r.u:""}" aria-label="Ergebnis"><button class="haupt" id="ok">Prüfen</button></div><div id="fb"></div></div>`;
   const ein=document.getElementById("ein");if(!matchMedia("(pointer:coarse)").matches)ein.focus();
-  const pruef=()=>{const v=parseFloat(ein.value.replace(/\s|€|%/g,"").replace(/\./g,"").replace(",","."));if(isNaN(v))return;const gut=Math.abs(v-r.a)<=Math.abs(r.a)*r.tol+0.05;antwort(gut,null,`Lösung: ${r.u==="%"?K(r.a.toFixed(1))+" %":r.u==="€"?EUR(r.a):K(r.a.toFixed(1))}. ${r.e}`,a)};
+  const pruef=()=>{const v=zahlLesen(ein.value,r.p);if(isNaN(v))return;const st=bewerten(v,r);ein.classList.add(st);
+   const genau=r.u==="€"&&Math.abs(rund(r.a,r.p)-r.a)>.004?` (genau ${zeig(r.a,2,"€")})`:"";
+   let hin="";if(st==="fast"){const ab=Math.abs(v-r.a)/Math.max(Math.abs(r.a),1e-9)*100;hin=rund(v,r.p)===rund(r.a,r.p)?`Gerundet wäre es genau richtig. Achte aufs Runden (${stellen(r.p,r.u)}). `:`Du liegst ${ab<1?"weniger als 1":Math.round(ab)} % daneben. Meist steckt ein Rundungsfehler im Zwischenergebnis. `}
+   antwort(st==="richtig",null,`${hin}Deine Eingabe: ${esc(ein.value.trim())} · Lösung: ${zeig(r.a,r.p,r.u)}${genau}. ${r.e}`,a,st==="fast")};
   document.getElementById("ok").onclick=pruef;ein.onkeydown=e=>{if(e.key==="Enter")pruef()};
  }
  document.getElementById("tipp").onclick=function(){a.tipp=true;this.disabled=true;document.getElementById("tippbox").innerHTML=`<div class="tipp">💡 ${a.t==="q"?Q[a.i][5]:a.r.h}</div>`};
  window.scrollTo(0,0);
 }
-function antwort(gut,knopf,erkl,a){
+function antwort(gut,knopf,erkl,a,fast=false){
  app.querySelectorAll(".antworten button,#ok,#ein,#tipp").forEach(b=>b.disabled=true);
  if(a.t==="q"){const q=Q[a.i];app.querySelectorAll(".antworten button").forEach(b=>{if(+b.dataset.o===q[3])b.classList.add("richtig")});if(!gut&&knopf)knopf.classList.add("falsch");
   const k=S.k[a.i]||[0,heute()];k[0]=gut?Math.min(k[0]+1,5):1;k[1]=plus(ABST[k[0]]);S.k[a.i]=k;}
  let x=0;
- if(gut){runde.combo++;runde.gut++;x=10+(runde.combo>=3?5:0)+(a.t==="c"?5:0);if(a.tipp)x=Math.ceil(x/2);runde.xp+=x;S.richtig++;if(a.t==="c")S.rechnen++}else runde.combo=0;
- document.getElementById("fb").innerHTML=`<div class="erkl"><b>${gut?`✅ Richtig! +${x} XP${a.tipp?" (mit Tipp)":""}`:"❌ Nicht ganz."}</b> ${erkl}</div><div class="reihe" style="margin-top:12px"><button class="haupt" id="weiter">${runde.nr+1<runde.liste.length?"Weiter →":"Auswertung"}</button></div>`;
+ if(gut){runde.combo++;runde.gut++;x=10+(runde.combo>=3?5:0)+(a.t==="c"?5:0);if(a.tipp)x=Math.ceil(x/2);runde.xp+=x;S.richtig++;if(a.t==="c")S.rechnen++}
+ else if(fast){runde.gut+=.5;x=Math.ceil((10+(a.t==="c"?5:0))/2);if(a.tipp)x=Math.ceil(x/2);runde.xp+=x}
+ else runde.combo=0;
+ document.getElementById("fb").innerHTML=`<div class="erkl${gut?" erkl-gut":fast?" erkl-fast":""}"><b>${gut?`✅ Richtig! +${x} XP${a.tipp?" (mit Tipp)":""}`:fast?`🟡 Fast richtig! +${x} XP${a.tipp?" (mit Tipp)":""}`:"❌ Nicht ganz."}</b> ${erkl}</div><div class="reihe" style="margin-top:12px"><button class="haupt" id="weiter">${runde.nr+1<runde.liste.length?"Weiter →":"Auswertung"}</button></div>`;
  const w=document.getElementById("weiter");w.focus({preventScroll:true});w.scrollIntoView({block:"nearest",behavior:"smooth"});
  w.onclick=()=>{runde.nr++;runde.nr<runde.liste.length?frage():ende()};
 }
@@ -364,7 +383,7 @@ function ende(){
  xpBuchen(runde.xp);
  const neu=[erfolg("erste"),...neueErfolge()].filter(Boolean);speichern();const lv=level();
  if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
- app.innerHTML=`<div class="karte" style="text-align:center"><div class="gross">${quote>=80?"🎉":quote>=50?"👍":"💪"} ${quote} %</div><p>${runde.gut} von ${runde.liste.length} richtig · <b>+${runde.xp} XP</b></p>${extra}
+ app.innerHTML=`<div class="karte" style="text-align:center"><div class="gross">${quote>=80?"🎉":quote>=50?"👍":"💪"} ${quote} %</div><p>${K(runde.gut)} von ${runde.liste.length} richtig${runde.gut%1?" (fast richtig zählt halb)":""} · <b>+${runde.xp} XP</b></p>${extra}
  ${runde.typ==="boss"&&quote<80?`<p>Für den Boss brauchst du 80 %. Falsche Fragen kommen in der Wiederholung zurück.</p>`:""}
  ${lv>lvAlt?`<p class="gold"><b>⬆ Level ${lv+1}: ${LEVEL[lv][1]}!</b></p>`:""}${neu.map(n=>`<p>🏆 Neuer Erfolg: <b>${n}</b></p>`).join("")}
  <div class="reihe" style="justify-content:center;margin-top:12px"><button class="haupt" onclick="${runde.typ==="arena"?"arena()":runde.typ==="boss"?`boss(${runde.w})`:`lektion(${runde.w||0})`}">Nochmal</button><button onclick="start()">Übersicht</button></div></div>
