@@ -77,7 +77,19 @@ input{font:inherit;color:var(--text);background:var(--bg);border:1px solid var(-
 .r-tasten button{min-height:46px;font-size:1.15rem;padding:4px}
 .r-tasten button.op{background:color-mix(in srgb,var(--akzent) 9%,var(--card))}
 .r-tasten .r-breit{grid-column:span 2}
-body.mit-rechner main{padding-bottom:470px}
+body.mit-rechner main{padding-bottom:520px}
+.r-chips{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}.r-chips:empty{display:none}
+.r-chips button{min-height:34px;padding:4px 10px;font-size:.88rem;border-style:dashed;border-color:color-mix(in srgb,var(--gold) 60%,var(--linie))}
+.fallbild{display:block;width:100%;max-width:420px;height:auto;margin:10px auto}
+.sv-dach{fill:color-mix(in srgb,var(--akzent) 70%,var(--card))}.sv-haus{fill:var(--bg);stroke:var(--linie)}
+.sv-whg{fill:var(--card);stroke:var(--linie)}.sv-hl{fill:color-mix(in srgb,var(--gold) 24%,var(--card));stroke:var(--gold)}
+.sv-t1{font:600 12px system-ui,sans-serif;fill:var(--text);text-anchor:middle}.sv-t2{font:11px system-ui,sans-serif;fill:var(--leise);text-anchor:middle}
+.sv-boden{stroke:var(--leise);stroke-width:2}.sv-punkt{fill:var(--akzent)}
+.falltab{width:100%;border-collapse:collapse;margin:10px 0 0;font-size:.92rem}
+.falltab th{text-align:left;color:var(--leise);font-weight:600;border-bottom:2px solid var(--linie);padding:6px 8px 6px 0}
+.falltab td{border-bottom:1px solid var(--linie);padding:6px 8px 6px 0;vertical-align:top}
+.erg{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--linie);font-size:.95rem}
+.erg b{white-space:nowrap}
 .abz{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
 .abz div{border:1px dashed var(--linie);border-radius:10px;padding:8px 10px;font-size:.9rem;color:var(--leise)}
 .abz div.hat{border-style:solid;color:var(--text)}
@@ -287,7 +299,7 @@ const heute=()=>iso(new Date()), plus=t=>{const d=new Date();d.setDate(d.getDate
 const plusAb=(s,n)=>{const d=new Date(s+"T12:00:00");d.setDate(d.getDate()+n);return iso(d)};
 const tage=(a,b)=>Math.round((new Date(b+"T12:00:00")-new Date(a+"T12:00:00"))/864e5);
 const datum=s=>s?s.split("-").reverse().join("."):"";
-const neuerStand=()=>({xp:0,serie:0,zuletzt:"",tag:{d:"",xp:0},k:{},medaille:{},kurs:{},richtig:0,rechnen:0,erfolge:{},gesichert:"",gesichertXp:0,geaendert:0});
+const neuerStand=()=>({xp:0,serie:0,zuletzt:"",tag:{d:"",xp:0},k:{},medaille:{},kurs:{},richtig:0,rechnen:0,erfolge:{},gesichert:"",gesichertXp:0,geaendert:0,faelle:{}});
 let S;try{S=JSON.parse(localStorage.getItem(KEY))}catch(e){}
 S=Object.assign(neuerStand(),S||{});
 let konto=null;try{konto=JSON.parse(localStorage.getItem(KEY+"_konto"))}catch(e){}
@@ -325,6 +337,8 @@ function start(){
  ${ranglisteKarte()}
  ${installHinweis()}
  <h2>Welten</h2><div class="welten">${WELTEN.map(w=>`<div class="welt"><b>${w.i} ${w.n} ${S.medaille[w.id]?'<span class="gold">🏅</span>':""}</b><span class="klein">${w.t}</span><div class="balken"><i style="width:${weltStand(w.id)}%"></i></div><span class="klein">${weltStand(w.id)} % sicher</span><div class="reihe"><button class="${S.kurs[w.id]?"":"offen"}" onclick="kurs(${w.id})">📘 Crashkurs${S.kurs[w.id]?" ✓":""}</button><button onclick="lektion(${w.id})">Lektion</button><button onclick="boss(${w.id})">👑 Boss</button></div></div>`).join("")}</div>
+ <h2>🏢 Fallstudien</h2><p class="klein" style="margin-top:-4px">Große Aufgaben mit Bild, unabhängig von den Welten: Mehrere Schritte bauen aufeinander auf, deine Zwischenergebnisse bleiben immer sichtbar.</p>
+ <div class="welten">${FAELLE.map(f=>`<div class="welt"><b>${f.i} ${f.t} ${S.faelle[f.id]?'<span class="gold">✓</span>':""}</b><span class="klein">${f.kurz}</span><span class="klein">${f.schritte.length} Schritte${S.faelle[f.id]?` · bestes Ergebnis ${S.faelle[f.id].best} %`:""}</span><div class="reihe"><button class="${S.faelle[f.id]?"":"offen"}" onclick="fall('${f.id}')">Fallstudie starten</button></div></div>`).join("")}</div>
  <h2>Erfolge</h2><div class="abz">${ERFOLGE.map(e=>`<div class="${S.erfolge[e[0]]?"hat":""}">${S.erfolge[e[0]]?"🏆":"🔒"} <b>${e[1]}</b><br>${e[2]}</div>`).join("")}</div>
  <p class="klein" style="margin-top:24px">${konto?"Dein Stand wird automatisch in deinem Konto gesichert.":"Dein Stand wird auf diesem Gerät gespeichert. Mit einem Sicherungslink holst du ihn jederzeit zurück."} Stand der Fakten: November 2026. Gesetze vor echten Entscheidungen nachprüfen.</p>`;
 }
@@ -425,6 +439,102 @@ function ende(){
  window.scrollTo(0,0);
 }
 
+/* ---------- Fallstudien: große Aufgaben mit Bild, Schritte bauen aufeinander auf ---------- */
+function hausSvg(w,spalten,titel){
+ const reihen=Math.ceil(w.length/spalten),bw=300,fh=52,x0=20,y0=62,h=reihen*fh,cw=bw/spalten;
+ let s=`<svg viewBox="0 0 340 ${y0+h+30}" class="fallbild" role="img" aria-label="${titel}"><polygon points="${x0-8},${y0} ${x0+bw/2},${y0-48} ${x0+bw+8},${y0}" class="sv-dach"/><rect x="${x0}" y="${y0}" width="${bw}" height="${h}" class="sv-haus"/>`;
+ w.forEach((e,i)=>{const x=x0+(i%spalten)*cw+5,y=y0+Math.floor(i/spalten)*fh+5;
+  s+=`<rect x="${x}" y="${y}" width="${cw-10}" height="${fh-10}" rx="6" class="${e.hl?"sv-hl":"sv-whg"}"/><text x="${x+(cw-10)/2}" y="${y+18}" class="sv-t1">${e.l}</text><text x="${x+(cw-10)/2}" y="${y+34}" class="sv-t2">${e.u}</text>`});
+ return s+`<line x1="0" y1="${y0+h}" x2="340" y2="${y0+h}" class="sv-boden"/><text x="170" y="${y0+h+22}" class="sv-t2">${titel}</text></svg>`;
+}
+const tabelle=(kopf,zeilen)=>`<table class="falltab"><tr>${kopf.map(k=>`<th>${k}</th>`).join("")}</tr>${zeilen.map(z=>`<tr>${z.map(c=>`<td>${c}</td>`).join("")}</tr>`).join("")}</table>`;
+const zeitSvg=()=>`<svg viewBox="0 0 340 150" class="fallbild" role="img" aria-label="Zeitstrahl der Finanzierung"><line x1="20" y1="40" x2="320" y2="40" class="sv-boden"/>${[["Kauf",20],["Jahr 1",80],["Jahr 2",170],["Jahr 5",300]].map(([t,x])=>`<circle cx="${x}" cy="40" r="5" class="sv-punkt"/><text x="${x}" y="24" class="sv-t1">${t}</text>`).join("")}<rect x="20" y="56" width="120" height="22" rx="5" class="sv-hl"/><text x="80" y="71" class="sv-t2">Bank: nur Zinsen</text><rect x="140" y="56" width="180" height="22" rx="5" class="sv-whg"/><text x="230" y="71" class="sv-t2">Bank: Zins + 2 % Tilgung</text><rect x="20" y="86" width="300" height="22" rx="5" class="sv-whg"/><text x="170" y="101" class="sv-t2">Verkäuferdarlehen 100.000 €, 5 gleiche Jahresraten, 0 %</text><rect x="140" y="116" width="180" height="22" rx="5" class="sv-hl"/><text x="230" y="131" class="sv-t2">Ziel ab Jahr 2: 180.000 € Miete</text></svg>`;
+const FAELLE=[
+ {id:"mfh",i:"🏢",t:"Das Mehrfamilienhaus",kurz:"Lohnt sich das Haus? Von der Miete bis zum höchsten Kaufpreis, den du zahlen könntest.",
+  bild:()=>hausSvg([{l:"W5 · 80 m²",u:"660 €"},{l:"W6 · 95 m²",u:"760 €"},{l:"W3 · 65 m²",u:"540 €"},{l:"W4 · 80 m²",u:"640 €"},{l:"W1 · 65 m²",u:"520 €"},{l:"W2 · 65 m²",u:"520 €"}],2,"6 Wohnungen, Kaltmiete im Monat"),
+  daten:[["Kaufpreis","690.000 €"],["Ort","Hessen, ohne Makler (6 % Grunderwerbsteuer + 2 % Notar und Grundbuch)"],["Darlehen","690.000 €, 4 % Zins + 2 % Tilgung"],["Eigenkapital","bezahlt die Kaufnebenkosten"],["Nicht umlegbare Kosten","6.000 € im Jahr"]],
+  schritte:[
+   {l:"Jahreskaltmiete",q:"Wie hoch ist die Jahreskaltmiete aller 6 Wohnungen?",a:43680,u:"€",p:0,e:"(520 + 520 + 540 + 640 + 660 + 760) € × 12 = 3.640 € × 12",h:"Alle Monatsmieten addieren und mal 12 nehmen."},
+   {l:"Kaufpreisfaktor",q:"Wie hoch ist der Kaufpreisfaktor? Nutze dein Ergebnis 1.",a:690000/43680,u:"",p:1,e:"690.000 € ÷ 43.680 €",h:"Faktor = Kaufpreis ÷ Jahreskaltmiete (Ergebnis 1)"},
+   {l:"Bruttorendite",q:"Wie hoch ist die Bruttomietrendite in %?",a:43680/690000*100,u:"%",p:1,e:"43.680 € ÷ 690.000 € × 100, oder 100 ÷ Faktor",h:"Bruttorendite = 100 ÷ Faktor (Ergebnis 2)"},
+   {l:"Kaufnebenkosten",q:"Wie viel Eigenkapital brauchst du für die Kaufnebenkosten?",a:55200,u:"€",p:0,e:"690.000 € × 8 %",h:"6 % + 2 % vom Kaufpreis"},
+   {l:"Bankrate pro Monat",q:"Wie hoch ist die monatliche Bankrate?",a:3450,u:"€",p:0,e:"690.000 € × (4 % + 2 %) ÷ 12",h:"Darlehen × (Zins + Tilgung) ÷ 12"},
+   {l:"Cashflow pro Monat",q:"Wie hoch ist der monatliche Cashflow vor Steuern? Nutze Ergebnis 1 und 5.",a:3640-500-3450,u:"€",p:0,e:"3.640 € Miete − 500 € Kosten (6.000 € ÷ 12) − 3.450 € Rate = −310 €",h:"Monatsmiete (Ergebnis 1 ÷ 12) − Kosten pro Monat − Rate (Ergebnis 5). Das Ergebnis kann negativ sein."},
+   {l:"Mietdeckung",q:"Wie hoch ist die Mietdeckung?",a:3640/3950,u:"",p:2,e:"3.640 € ÷ (3.450 € + 500 €)",h:"Monatsmiete ÷ (Rate + Kosten pro Monat)"},
+   {l:"Höchstes Darlehen",q:"Wie hoch dürfte das Darlehen höchstens sein, damit der Cashflow genau 0 € ist (gleiche Konditionen)?",a:628000,u:"€",p:-3,e:"Für die Rate bleiben 3.640 € − 500 € = 3.140 € im Monat. 3.140 € × 12 ÷ 6 % = 628.000 €",h:"Erlaubte Rate = Monatsmiete − Kosten. Darlehen = erlaubte Rate × 12 ÷ 6 %"}],
+  fazit:"Bei 690.000 € trägt sich das Haus nicht: Die Mietdeckung liegt unter 1, und jeden Monat fehlen 310 €. Um es ohne Zuschuss zu halten, müsstest du rund 62.000 € herunterhandeln, mehr Eigenkapital einbringen oder die Mieten entwickeln."},
+ {id:"sanierung",i:"🛠️",t:"Sanieren und nachbeleihen",kurz:"Drei alte Wohnungen werden saniert. Was bringt das an Miete, Wert und frischem Kredit?",
+  bild:()=>hausSvg([{l:"W7",u:"540 €"},{l:"W8 · alt",u:"450 € → 650 €",hl:1},{l:"W5",u:"540 €"},{l:"W6 · alt",u:"450 € → 650 €",hl:1},{l:"W3",u:"540 €"},{l:"W4",u:"540 €"},{l:"W1 · alt",u:"450 € → 650 €",hl:1},{l:"W2",u:"540 €"}],2,"8 Wohnungen, gelb = wird saniert"),
+  daten:[["Heute","5 Wohnungen zu 540 €, 3 alte Wohnungen zu 450 € Kaltmiete"],["Sanierung","18.000 € netto pro alter Wohnung, danach 650 € Miete"],["Bank","Faktor 13, leiht bis 70 % des Werts"],["Restschuld","420.000 € (gekauft vor 8 Jahren)"]],
+  schritte:[
+   {l:"Ist-Jahresmiete heute",q:"Wie hoch ist die Jahreskaltmiete heute?",a:48600,u:"€",p:0,e:"(5 × 540 € + 3 × 450 €) × 12 = 4.050 € × 12",h:"Alle Monatsmieten addieren und mal 12 nehmen."},
+   {l:"Mehrmiete pro Jahr",q:"Um wie viel steigt die Jahresmiete durch die Sanierung?",a:7200,u:"€",p:0,e:"3 Wohnungen × 200 € × 12",h:"Mieterhöhung pro Wohnung × 3 × 12"},
+   {l:"Rendite der Sanierung",q:"Welche Rendite bringt das Geld, das du in die Sanierung steckst (in %)? Nutze Ergebnis 2.",a:7200/54000*100,u:"%",p:1,e:"7.200 € ÷ (3 × 18.000 €) × 100",h:"Mehrmiete (Ergebnis 2) ÷ Sanierungskosten × 100"},
+   {l:"Bankwert danach",q:"Welchen Wert setzt die Bank nach der Sanierung für das Haus an?",a:55800*13,u:"€",p:0,e:"(48.600 € + 7.200 €) × 13 = 55.800 € × 13",h:"(Ergebnis 1 + Ergebnis 2) × Faktor"},
+   {l:"Spielraum Nachbeleihung",q:"Wie groß ist dein Spielraum für eine Nachbeleihung? Nutze Ergebnis 4.",a:725400*.7-420000,u:"€",p:-3,e:"725.400 € × 70 % − 420.000 € = 507.780 € − 420.000 €",h:"Bankwert (Ergebnis 4) × 70 % − Restschuld"},
+   {l:"Übrig nach der Sanierung",q:"Du bezahlst die Sanierung aus der Nachbeleihung. Wie viel bleibt dann übrig?",a:87780-54000,u:"€",p:-2,e:"87.780 € − 54.000 €",h:"Ergebnis 5 − Sanierungskosten"},
+   {l:"Wert je Euro Sanierung",q:"Wie viel Bankwert schafft jeder Euro, den du in die Sanierung steckst?",a:93600/54000,u:"",p:2,e:"7.200 € × 13 = 93.600 € mehr Wert, geteilt durch 54.000 €",h:"Mehrmiete (Ergebnis 2) × Faktor ÷ Sanierungskosten"}],
+  fazit:"Die Sanierung bringt 13,3 % Rendite und schafft mehr Wert, als sie kostet. Die Nachbeleihung bezahlt sie komplett, und es bleiben rund 34.000 € übrig. Weil der Kauf länger als 3 Jahre her ist, greift die 15-%-Grenze nicht: Die Kosten sind meist sofort als Erhaltung abziehbar."},
+ {id:"weg",i:"🧾",t:"Die WEG-Abrechnung",kurz:"Deine Eigentumswohnung bekommt die Jahresabrechnung. Was zahlst du, und was trägt der Mieter?",
+  bild:()=>tabelle(["Kostenart","Haus gesamt","Verteilt nach"],[["Erhaltungsrücklage","4.521,00 €","Miteigentumsanteil"],["Gebäudeversicherung","1.776,38 €","Miteigentumsanteil"],["Verwaltergebühr","450,00 €","Einheiten"],["Allgemeinstrom","366,05 €","Einheiten"],["Wasser","1.736,65 €","Verbrauch (Zähler)"]]),
+  daten:[["Dein Miteigentumsanteil","733/10.000"],["Einheiten im Haus","6"],["Dein Wasserverbrauch","58 m³ von 498 m³"],["Deine Vorauszahlung","75 € im Monat"]],
+  schritte:[
+   {l:"Anteil Rücklage",q:"Wie hoch ist dein Anteil an der Erhaltungsrücklage?",a:331.39,u:"€",p:2,e:"4.521,00 € × 733 ÷ 10.000 = 331,39 €",h:"Gesamtbetrag × 733 ÷ 10.000"},
+   {l:"Anteil Versicherung",q:"Wie hoch ist dein Anteil an der Gebäudeversicherung?",a:130.21,u:"€",p:2,e:"1.776,38 € × 733 ÷ 10.000 = 130,21 €",h:"Gesamtbetrag × 733 ÷ 10.000"},
+   {l:"Anteil nach Einheiten",q:"Verwaltergebühr und Allgemeinstrom werden nach Einheiten verteilt. Wie hoch ist dein Anteil an beiden zusammen?",a:136.01,u:"€",p:2,e:"(450,00 € + 366,05 €) ÷ 6 = 136,01 €",h:"(Verwaltergebühr + Allgemeinstrom) ÷ 6"},
+   {l:"Anteil Wasser",q:"Wie hoch ist dein Anteil an den Wasserkosten?",a:202.26,u:"€",p:2,e:"1.736,65 € × 58 ÷ 498 = 202,26 €",h:"Gesamtkosten × dein Verbrauch ÷ Gesamtverbrauch"},
+   {l:"Deine Kosten gesamt",q:"Wie hoch sind deine Kosten insgesamt? Nutze die Ergebnisse 1 bis 4.",a:799.87,u:"€",p:2,e:"331,39 € + 130,21 € + 136,01 € + 202,26 €",h:"Ergebnis 1 + 2 + 3 + 4"},
+   {l:"Guthaben",q:"Du hast das ganze Jahr Hausgeld vorausgezahlt. Wie hoch ist dein Guthaben?",a:100.13,u:"€",p:2,e:"12 × 75 € = 900 €, minus 799,87 €",h:"Vorauszahlung im Jahr − Ergebnis 5"},
+   {l:"Auf den Mieter umlegbar",q:"Umlegbar auf deinen Mieter sind nur Versicherung, Allgemeinstrom und Wasser. Wie viel darfst du ihm in Rechnung stellen?",a:130.21+61.01+202.26,u:"€",p:2,e:"130,21 € + 366,05 € ÷ 6 (= 61,01 €) + 202,26 €",h:"Ergebnis 2 + Allgemeinstrom ÷ 6 + Ergebnis 4"}],
+  fazit:"Von 799,87 € darfst du nur 393,48 € an den Mieter weitergeben. Rücklage und Verwaltung bleiben bei dir. Plane diese Kosten bei jeder Eigentumswohnung ein, wenn du die Rendite rechnest."},
+ {id:"deal",i:"🤝",t:"Deal mit Verkäuferdarlehen",kurz:"27 Einheiten, ein Jahr ohne Tilgung und ein zinsloses Verkäuferdarlehen. Was bleibt im Monat übrig?",
+  bild:zeitSvg,
+  daten:[["Kaufpreis","1.500.000 € (heruntergehandelt von 2 Mio. €)"],["Miete heute","156.000 € im Jahr"],["Bank","1.400.000 €, 4 % Zins, Jahr 1 ohne Tilgung, ab Jahr 2 dazu 2 % Tilgung"],["Verkäuferdarlehen","100.000 €, zinslos, 5 gleiche Jahresraten"],["Nicht umlegbare Kosten","18.000 € im Jahr"],["Kaufnebenkosten","aus Eigenkapital"]],
+  schritte:[
+   {l:"Kaufpreisfaktor",q:"Zu welchem Faktor wurde gekauft?",a:1500000/156000,u:"",p:1,e:"1.500.000 € ÷ 156.000 €",h:"Kaufpreis ÷ Jahresmiete"},
+   {l:"Zinsen Jahr 1",q:"Wie viel Zinsen zahlst du im ersten Jahr an die Bank?",a:56000,u:"€",p:0,e:"1.400.000 € × 4 %",h:"Darlehen × Zinssatz"},
+   {l:"Rate Verkäuferdarlehen",q:"Wie hoch ist die jährliche Rate für das Verkäuferdarlehen?",a:20000,u:"€",p:0,e:"100.000 € ÷ 5 Jahre",h:"Betrag ÷ Laufzeit"},
+   {l:"Cashflow Jahr 1",q:"Wie hoch ist der Cashflow pro Monat im ersten Jahr? Nutze Ergebnis 2 und 3.",a:62000/12,u:"€",p:0,e:"(156.000 € − 18.000 € − 56.000 € − 20.000 €) ÷ 12 = 62.000 € ÷ 12",h:"(Miete − Kosten − Zinsen − Verkäuferdarlehen) ÷ 12"},
+   {l:"Cashflow ab Jahr 2",q:"Ab Jahr 2 kommen 2 % Tilgung dazu, die Miete bleibt erst einmal bei 156.000 €. Wie hoch ist der Cashflow pro Monat?",a:34000/12,u:"€",p:0,e:"1.400.000 € × 2 % = 28.000 € Tilgung. (62.000 € − 28.000 €) ÷ 12",h:"(Überschuss aus Jahr 1 − Tilgung) ÷ 12"},
+   {l:"Cashflow mit Zielmiete",q:"Gelingt es, die Miete ab Jahr 2 auf 180.000 € zu entwickeln: Wie hoch ist dann der Cashflow pro Monat?",a:58000/12,u:"€",p:0,e:"24.000 € mehr Miete: (34.000 € + 24.000 €) ÷ 12",h:"(Überschuss ab Jahr 2 + 24.000 €) ÷ 12"},
+   {l:"Rendite mit Zielmiete",q:"Welche Bruttorendite auf den Kaufpreis hat das Haus mit der Zielmiete (in %)?",a:12,u:"%",p:1,e:"180.000 € ÷ 1.500.000 € × 100",h:"Zielmiete ÷ Kaufpreis × 100"}],
+  fazit:"Das tilgungsfreie Jahr schönt den Start: Ab Jahr 2 halbiert sich der Überschuss fast. Erst die Mietentwicklung macht den Deal richtig gut. Gelingt sie nicht, bleibt er trotzdem positiv, aber mit deutlich weniger Puffer."}];
+let fallR=null;
+function fall(id){const f=FAELLE.find(x=>x.id===id);fallR={f,nr:0,erg:[],st:[],xp:0,tipp:false};rechnerZu(true);fallSchritt()}
+function ergListe(){const f=fallR.f;return fallR.erg.map((w,i)=>{const s=f.schritte[i];return`<div class="erg"><span>${fallR.st[i]==="richtig"?"✅":fallR.st[i]==="fast"?"🟡":"❌"} E${i+1} · ${s.l}</span><b>${zeig(w,s.p,s.u)}</b></div>`}).join("")}
+function fallSchritt(){
+ ansicht="fall";const f=fallR.f,nr=fallR.nr,s=f.schritte[nr];fallR.tipp=false;
+ app.innerHTML=`<div class="kopf"><button onclick="fallAbbrechen()">← Übersicht</button><span class="chip">${f.i} Schritt ${nr+1} / ${f.schritte.length}</span></div><div class="balken"><i style="width:${nr/f.schritte.length*100}%"></i></div>
+ <div class="karte"><h2 style="margin-top:0">${f.t}</h2><p class="klein">${f.kurz}</p>${f.bild()}${tabelle(["Angabe","Wert"],f.daten)}</div>
+ ${fallR.erg.length?`<div class="karte"><b>📋 Deine Zwischenergebnisse</b><p class="klein" style="margin:4px 0">Weiter rechnest du immer mit der richtigen Lösung. Im Taschenrechner kannst du sie direkt antippen.</p>${ergListe()}</div>`:""}
+ <div class="karte" id="schritt"><span class="klein">Schritt ${nr+1}: ${s.l}</span><h2 style="margin-top:6px">${s.q}</h2><p class="klein" style="margin-top:-4px">Gib das Ergebnis ${stellen(s.p,s.u)} an.</p>
+ <div class="reihe"><button class="tippknopf" id="tipp">💡 Tipp anzeigen (halbe XP)</button><button class="tippknopf" id="rechnerknopf">🧮 Taschenrechner</button></div><div id="tippbox"></div>
+ <div class="reihe" style="margin-top:12px"><input id="ein" inputmode="decimal" placeholder="Ergebnis${s.u?" in "+s.u:""}" aria-label="Ergebnis"><button class="haupt" id="ok">Prüfen</button></div><div id="fb"></div></div>`;
+ const ein=document.getElementById("ein");
+ document.getElementById("tipp").onclick=function(){fallR.tipp=true;this.disabled=true;document.getElementById("tippbox").innerHTML=`<div class="tipp">💡 ${s.h}</div>`};
+ document.getElementById("rechnerknopf").onclick=()=>rechnerAuf();
+ const pruef=()=>{const v=zahlLesen(ein.value,s.p);if(isNaN(v))return;const st=bewerten(v,s);ein.classList.add(st);
+  document.querySelectorAll("#ok,#ein,#tipp,#rechnerknopf").forEach(b=>b.disabled=true);rechnerZu(true);
+  let x=st==="richtig"?15:st==="fast"?8:0;if(fallR.tipp)x=Math.ceil(x/2);fallR.xp+=x;fallR.erg.push(s.a);fallR.st.push(st);
+  const letzter=nr+1>=f.schritte.length;
+  document.getElementById("fb").innerHTML=`<div class="erkl${st==="richtig"?" erkl-gut":st==="fast"?" erkl-fast":""}"><b>${st==="richtig"?`✅ Richtig! +${x} XP`:st==="fast"?`🟡 Fast richtig! +${x} XP`:"❌ Nicht ganz."}</b> Deine Eingabe: ${esc(ein.value.trim())} · Lösung: ${zeig(s.a,s.p,s.u)}. ${s.e}${st!=="richtig"&&!letzter?" Im nächsten Schritt rechnest du mit der richtigen Lösung weiter.":""}</div><div class="reihe" style="margin-top:12px"><button class="haupt" id="weiter">${letzter?"Auswertung":"Nächster Schritt →"}</button></div>`;
+  const w=document.getElementById("weiter");w.scrollIntoView({block:"nearest",behavior:"smooth"});
+  w.onclick=()=>{fallR.nr++;fallR.nr<f.schritte.length?fallSchritt():fallEnde()}};
+ document.getElementById("ok").onclick=pruef;ein.onkeydown=e=>{if(e.key==="Enter")pruef()};
+ if(nr>0)setTimeout(()=>document.getElementById("schritt").scrollIntoView({block:"start",behavior:"smooth"}),60);else window.scrollTo(0,0);
+ if(rechnerOffen)rechnerAuf();
+}
+function fallAbbrechen(){if(fallR&&fallR.nr>0&&!confirm("Fallstudie abbrechen? Die Punkte aus diesem Durchgang gehen verloren."))return;fallR=null;start()}
+function fallEnde(){
+ ansicht="fallende";rechnerZu();const f=fallR.f,n=f.schritte.length,pkt=fallR.st.reduce((a,s)=>a+(s==="richtig"?1:s==="fast"?.5:0),0),quote=Math.round(pkt/n*100),erst=!S.faelle[f.id];
+ let x=fallR.xp;if(erst&&quote>=50)x+=30;xpBuchen(x);
+ S.faelle[f.id]={best:Math.max(quote,(S.faelle[f.id]||{}).best||0),datum:heute()};const neu=neueErfolge();speichern();
+ app.innerHTML=`<div class="karte" style="text-align:center"><div class="gross">${quote>=80?"🎉":quote>=50?"👍":"💪"} ${quote} %</div><p>${K(pkt)} von ${n} Schritten richtig · <b>+${x} XP</b>${erst&&quote>=50?" (inklusive 30 XP Bonus für die erste Lösung)":""}</p>${neu.map(e=>`<p>🏆 Neuer Erfolg: <b>${e}</b></p>`).join("")}
+ <div class="reihe" style="justify-content:center;margin-top:12px"><button class="haupt" onclick="fall('${f.id}')">Nochmal</button><button onclick="start()">Übersicht</button></div></div>
+ <div class="karte"><b>📋 Alle Ergebnisse: ${f.t}</b>${ergListe()}<p class="merke"><b>Fazit:</b> ${f.fazit}</p></div>`;
+ fallR=null;window.scrollTo(0,0);
+}
+
 /* ---------- Taschenrechner ---------- */
 let rechnerOffen=false,rTerm="",rFertig=false;
 const zahlText=(w,gruppe)=>(Math.abs(w)<1e-12?0:w).toLocaleString("de-DE",{maximumFractionDigits:6,useGrouping:!!gruppe}).replace("-","−");
@@ -434,6 +544,7 @@ function rechnerAuf(){
   el=document.createElement("div");el.id="rechner";el.className="rechner";el.setAttribute("role","dialog");el.setAttribute("aria-label","Taschenrechner");
   el.innerHTML=`<div class="rechner-innen"><div class="r-kopf"><b>🧮 Taschenrechner</b><button class="tippknopf" data-t="zu" aria-label="Taschenrechner schließen">✕ Schließen</button></div>
   <div class="r-anzeige"><div class="r-term" id="rterm"></div><div class="r-wert" id="rwert">0</div></div>
+  <div class="r-chips" id="rchips"></div>
   <div class="r-tasten">${["C","(",")","⌫","7","8","9","÷","4","5","6","×","1","2","3","−","0",",","%","+"].map(t=>`<button data-t="${t}"${/[0-9,]/.test(t)?"":' class="op"'}>${t}</button>`).join("")}
   <button data-t="=" class="op r-breit">=</button><button data-t="ok" class="haupt r-breit">Übernehmen</button></div>
   <p class="klein" style="margin:6px 0 0;text-align:center">Punkt vor Strich · % teilt durch 100 · „Übernehmen“ setzt das Ergebnis ins Antwortfeld</p></div>`;
@@ -441,7 +552,11 @@ function rechnerAuf(){
   el.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>rechnerTaste(b.dataset.t));
  }
  el.hidden=false;rechnerOffen=true;document.body.classList.add("mit-rechner");rTerm="";rFertig=false;rechnerZeigen();
+ const ch=document.getElementById("rchips"),l=ansicht==="fall"&&fallR?fallR.erg:[];
+ ch.innerHTML=l.map((w,i)=>`<button data-w="${i}">E${i+1}: ${zahlText(w,true)}</button>`).join("");
+ ch.querySelectorAll("[data-w]").forEach(b=>b.onclick=()=>rechnerWert(l[+b.dataset.w]));
 }
+function rechnerWert(w){if(rFertig){rTerm="";rFertig=false}if(/[0-9,)%]/.test(rTerm.slice(-1)))rTerm+="×";rTerm+=w<0?"("+zahlText(w)+")":zahlText(w);rechnerZeigen()}
 function rechnerZu(behalten){const el=document.getElementById("rechner");if(el)el.hidden=true;document.body.classList.remove("mit-rechner");if(!behalten)rechnerOffen=false}
 function rechnerTaste(t){
  if(t==="zu")return rechnerZu();
