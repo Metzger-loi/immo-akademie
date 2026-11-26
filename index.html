@@ -90,6 +90,18 @@ body.mit-rechner main{padding-bottom:520px}
 .falltab td{border-bottom:1px solid var(--linie);padding:6px 8px 6px 0;vertical-align:top}
 .erg{display:flex;justify-content:space-between;gap:10px;padding:7px 0;border-bottom:1px solid var(--linie);font-size:.95rem}
 .erg b{white-space:nowrap}
+.genau{margin:10px 0;padding:12px 14px;border-radius:10px;background:color-mix(in srgb,var(--akzent) 4%,var(--bg));line-height:1.6}
+.begriff{all:unset;cursor:pointer;border-bottom:1.5px dotted var(--akzent);font:inherit;color:inherit}
+.begriff:focus-visible,.begriff-chip:focus-visible{outline:2px solid var(--akzent);outline-offset:2px}
+.begriffsliste{margin-top:14px;padding-top:10px;border-top:1px dashed var(--linie)}
+.begriffsliste .reihe{margin-top:6px;gap:6px}
+.begriffsliste .reihe>button.begriff-chip,button.begriff-chip{flex:0 0 auto;min-height:34px;padding:4px 10px;font-size:.9rem;border-radius:999px;border-style:dashed}
+.begriff-pop{position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);border-top:1px solid var(--linie);box-shadow:0 -8px 28px rgba(0,0,0,.22);border-radius:16px 16px 0 0;padding:14px 16px max(14px,env(safe-area-inset-bottom))}
+.begriff-pop[hidden]{display:none}
+.begriff-pop>div{max-width:620px;margin:0 auto}
+.begriff-pop .kopfzeile{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.begriff-pop .kopfzeile button{min-height:36px;padding:4px 10px}
+.lex{padding:10px 0;border-bottom:1px solid var(--linie)}.lex b{display:block}
 .abz{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:8px}
 .abz div{border:1px dashed var(--linie);border-radius:10px;padding:8px 10px;font-size:.9rem;color:var(--leise)}
 .abz div.hat{border-style:solid;color:var(--text)}
@@ -332,7 +344,7 @@ function start(){
  ${S.xp===0?`<div class="karte hinweis"><b>👋 Willkommen!</b><p>Fang mit dem <b>Crashkurs</b> der ersten Welt an: Dort lernst du die Formeln an kleinen Beispielen. Danach übst du sie in der Lektion, und am Ende wartet der Boss.</p><button class="haupt" onclick="kurs(1)">📘 Crashkurs Grundrechnung</button></div>`:""}
  <div class="karte"><b>Level ${lv+1}: ${LEVEL[lv][1]}</b>${nx?` <span class="klein">· noch ${nx[0]-S.xp} XP bis ${nx[1]}</span>`:""}<div class="balken"><i style="width:${pr}%"></i></div>
  <div class="klein">Tagesziel: ${Math.min(S.tag.xp,TAGESZIEL)} / ${TAGESZIEL} XP</div><div class="balken"><i style="width:${Math.min(S.tag.xp/TAGESZIEL*100,100)}%"></i></div>
- <div class="reihe" style="margin-top:12px"><button class="haupt" onclick="lektion(0)">▶ Weiterlernen${f?` (${f} ${f===1?"Wiederholung":"Wiederholungen"})`:""}</button><button onclick="arena()">🧮 Rechen-Arena</button><button onclick="sicherung()">💾 Sichern &amp; Laden</button></div></div>
+ <div class="reihe" style="margin-top:12px"><button class="haupt" onclick="lektion(0)">▶ Weiterlernen${f?` (${f} ${f===1?"Wiederholung":"Wiederholungen"})`:""}</button><button onclick="arena()">🧮 Rechen-Arena</button><button onclick="lexikon()">📖 Lexikon</button><button onclick="sicherung()">💾 Sichern &amp; Laden</button></div></div>
  ${sicherungFaellig()?`<div class="karte hinweis"><b>💾 Spielstand sichern</b><p class="klein">Letzte Sicherung: ${S.gesichert?datum(S.gesichert):"noch nie"}. Schick dir einen Sicherungslink, dann ist dein Stand auch nach dem Löschen der Browserdaten oder auf einem neuen Handy wieder da.</p><button class="haupt" onclick="linkTeilen()">🔗 Sicherungslink senden</button></div>`:""}
  ${ranglisteKarte()}
  ${installHinweis()}
@@ -358,10 +370,12 @@ function kurs(w,nr=0){
  ansicht="kurs";rechnerZu();runde=null;
  const L=KURS[w],c=L[nr],W=WELTEN[w-1];
  app.innerHTML=`<div class="kopf"><button onclick="start()">← Übersicht</button><span class="chip">📘 Crashkurs · ${nr+1} / ${L.length}</span></div><div class="balken"><i style="width:${(nr+1)/L.length*100}%"></i></div>
- <div class="karte" id="kurskarte"><span class="klein">${W.i} ${W.n}</span><h2 style="margin-top:6px">${c.t}</h2>
- ${c.f?`<div class="formel">${c.f.split(" · ").map(z=>`<div>${z}</div>`).join("")}</div>`:""}
- ${c.b?`<div class="beispiel"><b>Beispiel:</b> ${c.b}</div>`:""}
- ${c.m?`<p class="merke"><b>Merke:</b> ${c.m}</p>`:""}
+ <div class="karte" id="kurskarte"><span class="klein">${W.i} ${W.n}</span>
+ ${(()=>{const g=new Set(),x=ERKL[w+"-"+nr];return`<h2 style="margin-top:6px">${verlinken(c.t,g)}</h2>${x?`<p class="genau"><b>Genauer erklärt:</b> ${verlinken(x,g)}</p>`:""}
+ ${c.f?`<div class="formel">${c.f.split(" · ").map(z=>`<div>${verlinken(z,g)}</div>`).join("")}</div>`:""}
+ ${c.b?`<div class="beispiel"><b>Beispiel:</b> ${verlinken(c.b,g)}</div>`:""}
+ ${c.m?`<p class="merke"><b>Merke:</b> ${verlinken(c.m,g)}</p>`:""}
+ ${g.size?`<div class="begriffsliste"><span class="klein">📖 Fachbegriffe auf dieser Karte (antippen):</span><div class="reihe">${[...g].map(i=>`<button class="begriff-chip" data-b="${i}">${BEGRIFFE[i][0]}</button>`).join("")}</div></div>`:""}`})()}
  <div class="reihe" style="margin-top:14px">${nr>0?`<button onclick="kurs(${w},${nr-1})">← Zurück</button>`:""}${nr<L.length-1?`<button class="haupt" id="weiter" onclick="kurs(${w},${nr+1})">Weiter →</button>`:`<button class="haupt" id="weiter" onclick="kursFertig(${w})">✓ Crashkurs abschließen</button>`}</div></div>
  <p class="klein">Tipp: Du kannst auch nach links und rechts wischen.</p>`;
  window.scrollTo(0,0);
@@ -420,7 +434,7 @@ function antwort(gut,knopf,erkl,a,fast=false){
  if(gut){runde.combo++;runde.gut++;x=10+(runde.combo>=3?5:0)+(a.t==="c"?5:0);if(a.tipp)x=Math.ceil(x/2);runde.xp+=x;S.richtig++;if(a.t==="c")S.rechnen++}
  else if(fast){runde.gut+=.5;x=Math.ceil((10+(a.t==="c"?5:0))/2);if(a.tipp)x=Math.ceil(x/2);runde.xp+=x}
  else runde.combo=0;
- document.getElementById("fb").innerHTML=`<div class="erkl${gut?" erkl-gut":fast?" erkl-fast":""}"><b>${gut?`✅ Richtig! +${x} XP${a.tipp?" (mit Tipp)":""}`:fast?`🟡 Fast richtig! +${x} XP${a.tipp?" (mit Tipp)":""}`:"❌ Nicht ganz."}</b> ${erkl}</div><div class="reihe" style="margin-top:12px"><button class="haupt" id="weiter">${runde.nr+1<runde.liste.length?"Weiter →":"Auswertung"}</button></div>`;
+ document.getElementById("fb").innerHTML=`<div class="erkl${gut?" erkl-gut":fast?" erkl-fast":""}"><b>${gut?`✅ Richtig! +${x} XP${a.tipp?" (mit Tipp)":""}`:fast?`🟡 Fast richtig! +${x} XP${a.tipp?" (mit Tipp)":""}`:"❌ Nicht ganz."}</b> ${verlinken(erkl,new Set())}</div><div class="reihe" style="margin-top:12px"><button class="haupt" id="weiter">${runde.nr+1<runde.liste.length?"Weiter →":"Auswertung"}</button></div>`;
  const w=document.getElementById("weiter");w.focus({preventScroll:true});w.scrollIntoView({block:"nearest",behavior:"smooth"});
  w.onclick=()=>{runde.nr++;runde.nr<runde.liste.length?frage():ende()};
 }
@@ -437,6 +451,189 @@ function ende(){
  <div class="reihe" style="justify-content:center;margin-top:12px"><button class="haupt" onclick="${runde.typ==="arena"?"arena()":runde.typ==="boss"?`boss(${runde.w})`:`lektion(${runde.w||0})`}">Nochmal</button><button onclick="start()">Übersicht</button></div></div>
  ${sicherungFaellig()?`<div class="karte hinweis"><b>💾 Denk an deine Sicherung</b><p class="klein">Ein Sicherungslink an dich selbst dauert fünf Sekunden und rettet deinen Stand, falls Browserdaten gelöscht werden.</p><button class="haupt" onclick="linkTeilen()">🔗 Sicherungslink senden</button></div>`:""}`;
  window.scrollTo(0,0);
+}
+
+/* ---------- Fachbegriffe: [Name, weitere Schreibweisen (| getrennt), Erklärung] ---------- */
+const BEGRIFFE=[
+["Kaltmiete","Nettokaltmiete|Kaltmieten","Die Miete nur für die Nutzung der Wohnung, ohne Betriebs- und Heizkosten. Sie ist das eigentliche Einkommen des Vermieters und die Grundlage aller Renditen."],
+["Warmmiete","","Alles, was der Mieter jeden Monat überweist: Kaltmiete plus Vorauszahlungen für Betriebs- und Heizkosten."],
+["Betriebskosten","Nebenkosten","Laufende Kosten des Hauses, die der Vermieter auf den Mieter umlegen darf, zum Beispiel Grundsteuer, Wasser, Müll, Versicherung, Hausmeister, Treppenhausstrom (§ 2 BetrKV). Der Mieter zahlt sie vorab und bekommt einmal im Jahr eine Abrechnung."],
+["Heizkosten","Heizung","Kosten für Heizung und Warmwasser. Sie gehören rechtlich zu den Betriebskosten, werden aber zu 50 bis 70 % nach Verbrauch abgerechnet (Heizkostenverordnung)."],
+["Ist-Miete","","Die Miete, die heute tatsächlich vereinbart ist und bezahlt wird."],
+["Soll-Miete","Mietpotenzial|Potenzial","Die Miete, die am Markt möglich wäre, etwa nach einer Sanierung oder bei Neuvermietung. Sie ist eine Schätzung, kein Geld auf dem Konto."],
+["Jahreskaltmiete","Jahresnettokaltmiete|JNKM|Jahresmiete","Alle Kaltmieten eines Hauses für ein Jahr, also Monatskaltmiete mal 12. In Exposés oft als JNKM abgekürzt."],
+["Kaufpreisfaktor","Faktor","Kaufpreis geteilt durch die Jahreskaltmiete. Er sagt, wie viele Jahresmieten das Haus kostet. Je kleiner, desto günstiger im Verhältnis zur Miete."],
+["Bruttomietrendite","Bruttorendite","Jahreskaltmiete geteilt durch den Kaufpreis, in Prozent. Schnell zu rechnen, aber ohne Nebenkosten und laufende Kosten."],
+["Nettomietrendite","Nettorendite","Rendite nach Abzug der Kosten, die der Vermieter selbst trägt, bezogen auf Kaufpreis plus Kaufnebenkosten. Ehrlicher als die Bruttorendite."],
+["Rendite","","Wie viel Prozent deines eingesetzten Geldes du pro Jahr zurückbekommst."],
+["Kaufnebenkosten","","Kosten zusätzlich zum Kaufpreis: Grunderwerbsteuer, Notar, Grundbuch und gegebenenfalls Makler. In Hessen meist 8 % ohne und knapp 12 % mit Makler."],
+["Grunderwerbsteuer","","Steuer, die beim Kauf eines Grundstücks an das Land geht. In Hessen 6 % des Kaufpreises, in Bayern 3,5 %."],
+["nicht umlegbare Kosten","nicht umlegbaren Kosten","Kosten, die der Vermieter selbst zahlen muss und nicht an den Mieter weitergeben darf, zum Beispiel Verwaltung, Instandhaltung und Rücklagen."],
+["Instandhaltung","Instandhaltungskosten","Reparaturen und Arbeiten, die das Haus in gutem Zustand halten, etwa ein neues Dach oder eine Heizungsreparatur. Zahlt immer der Vermieter."],
+["Cashflow","","Was nach allen Zahlungen (Bankrate, Kosten) von der Miete übrig bleibt oder fehlt. Zeigt, ob du dir das Haus jeden Monat leisten kannst."],
+["Mietdeckung","","Kaltmiete geteilt durch Bankrate plus nicht umlegbare Kosten. Über 1,0 trägt sich das Haus selbst."],
+["Annuitätendarlehen","Annuität","Der übliche Immobilienkredit: Du zahlst jeden Monat dieselbe Rate. Darin stecken Zinsen und Tilgung."],
+["Tilgung","Tilgungsanteil|anfängliche Tilgung","Der Teil der Rate, mit dem du den Kredit zurückzahlst. Die anfängliche Tilgung wird in Prozent des Darlehens pro Jahr angegeben, meist 1 bis 3 %."],
+["Zinsanteil","","Der Teil der Rate, der als Zins an die Bank geht. Er wird kleiner, je weiter die Schuld sinkt."],
+["Zinsbindung","","Die Zeit, für die dein Zinssatz fest vereinbart ist, zum Beispiel 10 oder 15 Jahre. Danach gilt der Zins, den die Bank dann verlangt."],
+["Vorfälligkeitsentschädigung","","Ausgleich, den die Bank verlangt, wenn du einen Kredit vor Ende der Zinsbindung zurückzahlst. Nach 10 Jahren kannst du immer ohne sie kündigen (§ 489 BGB)."],
+["Restschuld","","Der Teil des Kredits, der noch nicht zurückgezahlt ist."],
+["Anschlussfinanzierung","Anschlusszins","Der neue Kredit oder Zinssatz für die Restschuld, wenn die Zinsbindung endet."],
+["Beleihungswert","","Der vorsichtig geschätzte, dauerhaft erzielbare Wert, den die Bank für ein Haus ansetzt. Er liegt meist unter dem Marktwert (Beleihungswertermittlungsverordnung, BelWertV)."],
+["Beleihungsauslauf","Beleihungsgrenze","Wie viel Prozent des Beleihungswerts dir die Bank leiht. Je niedriger, desto besser der Zins."],
+["Verkehrswert","Marktwert","Der Preis, der für ein Haus zu einem Stichtag am Markt erzielbar wäre (§ 194 BauGB). Bei Zwangsversteigerungen setzt ihn ein Gutachter fest."],
+["Eigenkapital","","Dein eigenes Geld, das du in den Kauf steckst, also nicht geliehen."],
+["Nachbeleihung","","Ein neuer Kredit auf ein Haus, das du schon besitzt. Möglich, wenn der Wert gestiegen oder die Schuld gesunken ist. Das Geld ist kein Einkommen und deshalb nicht zu versteuern."],
+["Haushaltsrechnung","","Die Rechnung der Bank, ob deine Einnahmen alle Ausgaben inklusive der neuen Kreditrate sicher decken."],
+["Stresstest","schlechten Fall","Die Probe, ob sich ein Haus auch dann trägt, wenn es schlecht läuft: höherer Zins, leere Wohnung, große Reparatur."],
+["Leerstand","","Eine Wohnung oder Fläche ist nicht vermietet und bringt keine Miete."],
+["Bonität","","Wie zuverlässig jemand zahlen kann, etwa ein Mieter oder ein Kreditnehmer."],
+["Kapitalisierungszins","Liegenschaftszins","Zinssatz, mit dem man aus einem jährlichen Ertrag einen Wert berechnet: Wert = Reinertrag ÷ Zins. Je höher der Zins, desto niedriger der Wert."],
+["Ertragswert","","Wert eines Hauses, berechnet aus den Mieten, die es dauerhaft bringt, nach Abzug der Bewirtschaftungskosten."],
+["Bewirtschaftungskosten","","Kosten, die der Eigentümer für den Betrieb trägt: Verwaltung, Instandhaltung, Mietausfall und nicht umlegbare Betriebskosten."],
+["Notar","notariell|Beurkundung|beurkundet","Neutrale Amtsperson, ohne die ein Grundstückskauf nicht wirksam ist. Der Notar liest den Vertrag vor, belehrt beide Seiten und sorgt für einen sicheren Ablauf."],
+["Auflassung","","Die Einigung vor dem Notar, dass das Eigentum vom Verkäufer auf den Käufer übergehen soll."],
+["Auflassungsvormerkung","Vormerkung","Eintrag im Grundbuch, der deinen Anspruch auf das Haus sichert. Danach kann der Verkäufer es nicht mehr an andere verkaufen oder belasten."],
+["Grundbuch","","Öffentliches Register beim Amtsgericht, in dem steht, wem ein Grundstück gehört und welche Lasten und Schulden darauf liegen."],
+["Grundschuld","Grundschulden|Hypothek|Hypotheken|Grundpfandrechte","Sicherheit für die Bank, eingetragen in Abteilung III des Grundbuchs. Zahlst du nicht, darf die Bank das Haus versteigern lassen."],
+["Nießbrauch","","Das Recht, ein fremdes Haus zu nutzen oder die Mieten zu bekommen, ohne Eigentümer zu sein. Steht in Abteilung II des Grundbuchs."],
+["Wegerecht","","Recht eines anderen, zum Beispiel des Nachbarn, über dein Grundstück zu gehen oder zu fahren."],
+["Notaranderkonto","","Treuhandkonto des Notars. Geld liegt dort sicher, bis vereinbarte Bedingungen erfüllt sind."],
+["Besitz, Nutzen und Lasten","BNL","Der wirtschaftliche Übergang: Ab diesem Tag bekommt der Käufer die Mieten und trägt die Kosten, auch wenn er noch nicht im Grundbuch steht."],
+["Maklerprovision","Provision|Courtage","Vergütung des Maklers für die Vermittlung, meist ein Prozentsatz vom Kaufpreis."],
+["Zwangsversteigerung","Versteigerung","Verkauf eines Grundstücks durch das Amtsgericht, meist weil der Eigentümer seine Schulden nicht zahlt. Gekauft wird wie gesehen."],
+["Zuschlag","","Die Entscheidung des Gerichts bei der Zwangsversteigerung, wer das Grundstück bekommt. Mit dem Zuschlag wird der Bieter Eigentümer."],
+["Spekulationsfrist","","Verkaufst du eine vermietete Immobilie erst nach mehr als 10 Jahren, ist der Gewinn privat steuerfrei (§ 23 EStG)."],
+["Gewerblicher Grundstückshandel","Drei-Objekt-Grenze","Wer innerhalb von 5 Jahren nach dem Kauf mehr als 3 Objekte verkauft, gilt meist als Händler. Dann sind Gewinne immer steuerpflichtig, dazu kommt Gewerbesteuer."],
+["Kaution","Mietkaution","Sicherheit des Mieters für offene Mieten oder Schäden, höchstens 3 Nettokaltmieten. Sie gehört dem Mieter und wird getrennt angelegt."],
+["ortsübliche Vergleichsmiete","Vergleichsmiete","Die Miete, die für vergleichbare Wohnungen in der Gemeinde in den letzten 6 Jahren üblich war (§ 558 BGB). Obergrenze für Mieterhöhungen."],
+["Mietspiegel","","Übersicht der Gemeinde über die ortsüblichen Mieten, sortiert nach Größe, Baujahr, Lage und Ausstattung."],
+["Kappungsgrenze","","Obergrenze für Mieterhöhungen bei laufenden Verträgen: höchstens 20 % in 3 Jahren, in Gebieten mit Wohnungsnot 15 %."],
+["Mietpreisbremse","","Regel in Gebieten mit Wohnungsnot: Bei Neuvermietung darf die Miete höchstens 10 % über der Vergleichsmiete liegen."],
+["Modernisierung","Modernisierungskosten|Modernisierungsumlage","Maßnahmen, die eine Wohnung verbessern, zum Beispiel Dämmung oder neue Fenster. Einen Teil der Kosten darf der Vermieter auf die Miete aufschlagen. Reine Reparaturen zählen nicht dazu."],
+["Indexmiete","","Miete, die an die Inflation gekoppelt ist und mit dem Verbraucherpreisindex steigt oder fällt."],
+["Verbraucherpreisindex","VPI|Index","Zahl des Statistischen Bundesamts, die zeigt, wie sich die Preise für den Lebensunterhalt entwickeln. Maß für die Inflation."],
+["Textform","","Eine lesbare Erklärung ohne eigenhändige Unterschrift, zum Beispiel per E-Mail oder Brief mit Namen (§ 126b BGB)."],
+["Eigenbedarf","","Der Vermieter braucht die Wohnung für sich oder nahe Angehörige. Einer der wenigen Gründe, aus denen er einem Mieter ordentlich kündigen darf."],
+["fristlose Kündigung","fristlos","Kündigung ohne Kündigungsfrist, nur aus wichtigem Grund, etwa bei hohen Mietschulden."],
+["Räumungsklage","","Klage beim Gericht, damit ein Mieter nach einer Kündigung auszieht."],
+["Wohnungseigentümergemeinschaft","WEG","Alle Eigentümer von Wohnungen in einem Haus zusammen. Sie verwalten das gemeinsame Eigentum, meist über einen Verwalter."],
+["Hausgeld","Hausgeldabrechnung","Monatliche Vorauszahlung eines Wohnungseigentümers an die WEG für die Kosten des Hauses und die Rücklage."],
+["Miteigentumsanteil","Miteigentumsanteilen","Dein Anteil am gemeinsamen Eigentum, zum Beispiel 733/10.000. Danach werden viele Kosten in der WEG verteilt."],
+["Erhaltungsrücklage","Rücklage|Instandhaltungsrücklage","Geld, das die WEG für künftige Reparaturen anspart. Der Eigentümer zahlt es, er darf es nicht auf den Mieter umlegen."],
+["Verteilerschlüssel","","Die Regel, nach der Kosten auf Wohnungen verteilt werden: nach Miteigentumsanteil, nach Einheiten, nach Wohnfläche oder nach Verbrauch."],
+["Werbungskosten","","Alle Kosten, die mit der Vermietung zusammenhängen und die du von den Mieteinnahmen abziehen darfst: Zinsen, AfA, Reparaturen, Verwaltung und mehr."],
+["AfA","Abschreibung|abschreiben|abgeschrieben","Absetzung für Abnutzung: Du ziehst jedes Jahr einen festen Teil des Gebäudepreises als Kosten ab, weil sich das Gebäude abnutzt. Senkt die Steuer, ohne dass Geld fließt."],
+["Kaufpreisaufteilung","","Die Aufteilung des Kaufpreises in Boden und Gebäude. Wichtig, weil nur das Gebäude abgeschrieben werden darf."],
+["Herstellungskosten","anschaffungsnahe Herstellungskosten","Kosten, die ein Gebäude erst schaffen oder wesentlich verbessern. Sie dürfen nur über die AfA abgezogen werden, nicht sofort."],
+["Erhaltungsaufwand","Erhaltung","Kosten für Reparaturen und Erhalt. Sie sind im Jahr der Zahlung sofort als Werbungskosten abziehbar."],
+["Verlustvortrag","vorgetragen","Ein Verlust, der in einem Jahr nicht mit anderem Einkommen verrechnet werden konnte, wird gespeichert und in späteren Jahren abgezogen (§ 10d EStG)."],
+["Körperschaftsteuer","","Einkommensteuer für Firmen wie die GmbH. 15 % bis 2027, danach sinkt sie schrittweise auf 10 % ab 2032."],
+["Gewerbesteuer","","Steuer der Gemeinde auf Gewinne von Unternehmen. Eine GmbH, die nur eigene Immobilien vermietet, kann sie mit der erweiterten Kürzung fast vermeiden."],
+["erweiterte Kürzung","","Regel im Gewerbesteuergesetz: Eine Firma, die nur eigenen Grundbesitz verwaltet, zahlt darauf praktisch keine Gewerbesteuer."],
+["Holding","Holding-GmbH","Eine Firma, deren Hauptaufgabe ist, Anteile an anderen Firmen zu halten. Gewinne aus den Töchtern sind dort zu 95 % steuerfrei."],
+["Abgeltungsteuer","Ausschüttungssteuer","25 % Steuer plus Soli auf Kapitalerträge, zum Beispiel wenn eine GmbH Gewinne an dich ausschüttet."],
+["Soli","Solidaritätszuschlag","Zuschlag von 5,5 % auf die Körperschaftsteuer oder Abgeltungsteuer."],
+["GmbH","","Gesellschaft mit beschränkter Haftung: eine eigene Firma, die für ihre Schulden nur mit ihrem Firmenvermögen haftet."],
+["eingetragene GbR","eGbR|GbR","Gesellschaft bürgerlichen Rechts: Zusammenschluss mehrerer Personen. Um Grundstücke zu kaufen, muss sie im Gesellschaftsregister eingetragen sein. Die Gesellschafter haften persönlich."],
+["Co-Investor","Co-Investoren|Mitinvestor","Ein Partner, der Geld in einen Kauf einbringt und dafür am Gewinn beteiligt ist."],
+["Verkäuferdarlehen","VKD","Der Verkäufer stundet einen Teil des Kaufpreises, und der Käufer zahlt ihn später ab. Senkt das nötige Eigenkapital."],
+["erster Rang","Rang","Die Reihenfolge der Rechte im Grundbuch. Wer im ersten Rang steht, bekommt bei einer Versteigerung zuerst sein Geld."],
+["Off-Market","","Ein Haus wird verkauft, ohne öffentlich angeboten zu werden, etwa über Kontakte. Weniger Konkurrenz, oft bessere Preise."],
+["Exposé","","Die Verkaufsunterlage eines Hauses mit Daten, Fotos, Mieten und Preis."],
+["Mehrfamilienhaus","MFH","Ein Haus mit mehreren Wohnungen, das als Ganzes einem Eigentümer gehört."],
+["ZFU","","Staatliche Zentralstelle für Fernunterricht. Fernkurse mit Lernkontrolle brauchen ihre Zulassung."],
+["U-Wert","","Wärmedurchgangskoeffizient: wie viel Wärme pro m² und Grad Temperaturunterschied durch ein Bauteil geht. Je kleiner, desto besser gedämmt."],
+["GModG","Gebäudemodernisierungsgesetz|GEG","Das Gesetz mit den Energieregeln für Gebäude, bis Juli 2026 Gebäudeenergiegesetz (GEG) genannt."],
+["Energieausweis","Energiekennwert","Dokument, das zeigt, wie viel Energie ein Haus pro m² und Jahr braucht. Muss bei Verkauf und Vermietung vorgelegt werden."],
+["hydraulischer Abgleich","Abgleich","Einstellung der Heizungsanlage, damit jeder Heizkörper genau so viel Heizwasser bekommt, wie er braucht."],
+["Vorlauftemperatur","Vorlauf","Die Temperatur, mit der das Heizwasser zu den Heizkörpern fließt. Je niedriger, desto sparsamer, besonders bei Wärmepumpen."],
+["Blower-Door-Test","Blower-Door|n50","Messung der Luftdichtheit: Ein Ventilator erzeugt Unter- oder Überdruck, und man misst, wie viel Luft durch Ritzen strömt."],
+["Thermografie","Wärmebilder|Wärmebild","Aufnahme mit einer Wärmebildkamera, die zeigt, wo ein Haus Wärme verliert."],
+["Asbest","","Früher verbauter Faserstoff, seit 1993 verboten. Gefährlich, wenn Fasern beim Bohren oder Abreißen frei werden."]];
+/* Genauer erklärt: Schlüssel "Welt-Kartennummer" */
+const ERKL={
+"1-0":"Die Kaltmiete ist der Preis für die Wohnung selbst. Was das Haus im Betrieb kostet, also Wasser, Müll, Grundsteuer und Heizung, zahlt der Mieter zusätzlich als Vorauszahlung, und der Vermieter rechnet es einmal im Jahr ab. Für dich als Investor zählt deshalb nur die Kaltmiete: Sie ist dein Einkommen, alles andere ist ein Durchlaufposten.",
+"1-1":"Mieten werden pro Monat vereinbart, Kaufpreise und Renditen aber pro Jahr verglichen. Deshalb rechnest du zuerst alle Monatskaltmieten zusammen und nimmst sie mal 12. In Exposés heißt diese Zahl oft JNKM.",
+"1-2":"Der Faktor ist die schnellste Kennzahl, um Angebote zu vergleichen. Er sagt, wie viele Jahre die Miete bräuchte, um den Kaufpreis einzuspielen, ohne Kosten und Zinsen. In Großstädten liegt er oft über 25, auf dem Land oft unter 15. Ein niedriger Faktor ist nicht automatisch ein Schnäppchen.",
+"1-3":"Die Bruttorendite ist der Faktor als Prozentzahl. Sie ist schnell gerechnet, lässt aber Kaufnebenkosten, laufende Kosten und Leerstand weg. Darum ist sie nur ein erster Filter.",
+"1-4":"Die Nettorendite ist ehrlicher: Oben steht nur die Miete, die nach deinen eigenen Kosten bleibt. Unten steht alles, was der Kauf wirklich kostet, also auch Grunderwerbsteuer, Notar und Makler. Zwischen brutto und netto liegt oft mehr als ein Prozentpunkt.",
+"1-5":"Die Rendite sagt, ob sich ein Haus lohnt. Der Cashflow sagt, ob du es dir leisten kannst: Er zeigt, was jeden Monat auf dem Konto übrig bleibt oder fehlt. Steuern sind hier noch nicht abgezogen, darum heißt es „vor Steuern“.",
+"1-6":"Die Mietdeckung zeigt in einer Zahl, ob die Miete alle laufenden Zahlungen trägt. 1,0 heißt genau ausgeglichen, 1,2 heißt 20 % Puffer. Je größer der Puffer, desto entspannter überstehst du einen Leerstand oder eine Reparatur.",
+"1-7":"Verkäufer und Makler rechnen gern mit der Miete, die nach einer Sanierung möglich wäre. Diese Mehrmiete entsteht aber erst durch deine Arbeit und dein Geld. Zahlst du sie beim Kauf schon mit, trägst du das ganze Risiko und bekommst nichts dafür.",
+"2-0":"Zum Kaufpreis kommen in Hessen 6 % Grunderwerbsteuer, rund 1,5 bis 2 % für Notar und Grundbuch und eventuell die Maklerprovision. Diese Kosten erhöhen den Wert des Hauses nicht. Deshalb finanzieren Banken sie ungern.",
+"2-1":"Beim Annuitätendarlehen zahlst du jeden Monat denselben Betrag. Darin stecken Zinsen für die Bank und Tilgung, also die Rückzahlung. Die anfängliche Tilgung bestimmt, wie schnell du schuldenfrei wirst: Bei 4 % Zins und 2 % Tilgung dauert es knapp 30 Jahre.",
+"2-2":"Zinsen zahlst du immer nur auf die Schuld, die noch offen ist. Mit jeder Rate sinkt die Schuld, damit sinkt auch der Zinsanteil. Weil die Rate gleich bleibt, wächst der Tilgungsanteil von Monat zu Monat.",
+"2-3":"Die Bank leiht nicht auf den Kaufpreis, sondern auf einen eigenen, vorsichtig geschätzten Wert, den Beleihungswert. Der Beleihungsauslauf sagt, wie viel Prozent davon du dir leihst. Bis etwa 60 % bekommst du die besten Zinsen, darüber wird der Kredit schrittweise teurer.",
+"2-4":"Für die Bank zählt, wie viel Geld dir jeden Monat für eine Kreditrate bleibt. Jede andere Rate, ob Auto, Handy oder Konsumkredit, verkleinert diesen Betrag. Umgerechnet über Zins und Tilgung wird aus wenigen hundert Euro schnell ein sechsstelliger Kreditbetrag.",
+"2-5":"Eigenkapital ist Geld, das dir gehört und nicht geliehen ist. Je mehr du einbringst, desto weniger Risiko trägt die Bank und desto besser wird dein Zins. Statt Bargeld kann auch eine andere, schuldenfreie Immobilie als Sicherheit dienen.",
+"2-6":"Die Zinsbindung ist die Zeit, in der dein Zins fest ist, egal was am Markt passiert. Danach brauchst du eine Anschlussfinanzierung zum dann aktuellen Zins. Zahlst du vorher zurück, verlangt die Bank meist eine Vorfälligkeitsentschädigung, außer nach 10 Jahren.",
+"2-7":"Ein Stresstest fragt: Was passiert, wenn es schlechter läuft als geplant? Typisch sind ein höherer Anschlusszins, eine leere Wohnung oder eine große Reparatur. Trägt sich das Haus auch dann, ist die Finanzierung solide.",
+"2-8":"Hast du ein Haus eine Weile, ist die Schuld kleiner und die Miete oft höher. Die Bank leiht dir dann auf dasselbe Haus neues Geld, das du in das nächste Objekt stecken kannst. So wächst ein Bestand ohne neues Erspartes, aber auch die Schulden wachsen mit.",
+"2-9":"Viele Banken schätzen ein vermietetes Haus grob über die Miete mal einen Faktor, den sie für die Region festlegen. Optik zählt dabei kaum, nur die Miete, die wirklich fließt. Deshalb schafft jede Mieterhöhung und jede Sanierung, die die Miete hebt, direkt neuen Kreditspielraum.",
+"3-0":"Weil Grundstücke so wertvoll sind, verlangt das Gesetz einen Notar. Er liest den Vertrag vor, erklärt ihn und sorgt dafür, dass Geld und Eigentum sicher getauscht werden. Er ist neutral und vertritt weder Käufer noch Verkäufer.",
+"3-1":"Der Hauskauf hat zwei Schritte: den Vertrag, mit dem du einen Anspruch auf das Haus bekommst, und die Eintragung, mit der es dir gehört. Dazwischen vergehen oft Wochen bis Monate. In dieser Zeit sichert dich die Vormerkung.",
+"3-2":"Das Grundbuch ist ein öffentliches Register beim Amtsgericht. Einsehen darf es, wer ein berechtigtes Interesse hat, zum Beispiel ein ernsthafter Käufer mit Vollmacht des Eigentümers. Vor jedem Kauf solltest du alle drei Abteilungen lesen.",
+"3-3":"Ein Makler bringt Käufer und Verkäufer zusammen und bekommt dafür eine Provision, meist als Prozent vom Kaufpreis. Bei Wohnungen und Einfamilienhäusern teilen sich beide Seiten die Provision, beim Mehrfamilienhaus ist sie frei verhandelbar.",
+"3-4":"Kann ein Eigentümer seine Schulden nicht zahlen, lässt die Bank das Haus über das Amtsgericht versteigern. Ein Gutachter setzt vorher den Verkehrswert fest. Gekauft wird wie gesehen: Besichtigungen sind oft nicht möglich, und Mieter oder Schäden übernimmst du mit.",
+"3-5":"Gewinne aus dem Verkauf privater Immobilien sind nur steuerfrei, wenn zwischen Kauf und Verkauf mehr als 10 Jahre liegen. Für selbst bewohnte Häuser gelten Ausnahmen. Bei vermieteten Häusern solltest du also mit mindestens 10 Jahren Haltedauer planen.",
+"3-6":"Wer häufig kauft und verkauft, gilt für das Finanzamt nicht mehr als privater Vermieter, sondern als Händler. Dann sind Gewinne immer steuerpflichtig, auch nach 10 Jahren, und es kommt Gewerbesteuer dazu.",
+"3-7":"Ein Kaufvertrag hat viele Stellschrauben neben dem Preis. Oft ist dem Verkäufer ein schneller, sicherer Abschluss wichtiger als der letzte Euro. Wer das erkennt, kann Zahlungsziel, Übergabe oder Mängel zu seinen Gunsten regeln.",
+"4-0":"Die Kaution sichert dich gegen offene Mieten oder Schäden beim Auszug. Sie gehört dem Mieter, du verwaltest sie nur und legst sie getrennt und verzinst an. Nach dem Auszug rechnest du ab und zahlst den Rest zurück.",
+"4-1":"Bei laufenden Verträgen darfst du die Miete nur schrittweise und nur bis zur ortsüblichen Vergleichsmiete anheben. Begründen kannst du das mit dem Mietspiegel, drei Vergleichswohnungen oder einem Gutachten. Der Mieter muss zustimmen, notfalls entscheidet das Gericht.",
+"4-2":"In Gemeinden mit knappem Wohnraum legt das Land fest, dass neue Mieten nur 10 % über der Vergleichsmiete liegen dürfen. Ob deine Gemeinde betroffen ist, steht in der Verordnung des Landes. In Hessen gilt sie in vielen Städten im Rhein-Main-Gebiet.",
+"4-3":"Eine Modernisierung verbessert die Wohnung, etwa durch Dämmung, neue Fenster oder einen Aufzug. Einen Teil der Kosten darfst du dauerhaft auf die Miete aufschlagen. Reine Reparaturen sind dagegen deine Sache und erhöhen die Miete nicht.",
+"4-4":"Bei einer Indexmiete folgt die Miete der Inflation, gemessen am Verbraucherpreisindex des Statistischen Bundesamts. Steigen die Preise, steigt die Miete mit, fallen sie, sinkt sie. Erhöhungen bis zur Vergleichsmiete sind dann ausgeschlossen.",
+"4-5":"Mieter können jederzeit mit 3 Monaten Frist kündigen, ohne Grund. Vermieter brauchen einen gesetzlichen Grund, etwa Eigenbedarf, und längere Fristen, je länger der Mieter schon dort wohnt. Das schützt langjährige Mieter.",
+"4-6":"Bei einer fristlosen Kündigung endet der Vertrag sofort, ohne Frist. Häufigster Grund sind Mietschulden. Zieht der Mieter trotzdem nicht aus, brauchst du eine Räumungsklage, und die dauert oft viele Monate.",
+"4-7":"Einmal im Jahr stellst du dem Mieter die tatsächlichen Betriebskosten seinen Vorauszahlungen gegenüber. Hat er zu wenig gezahlt, zahlt er nach, sonst bekommt er Geld zurück. Die Frist von 12 Monaten ist streng.",
+"4-8":"Gehört dir nur eine Wohnung in einem Haus, bist du Mitglied der Wohnungseigentümergemeinschaft. Sie verwaltet das gemeinsame Haus, meist über einen Verwalter, und verteilt die Kosten jedes Jahr auf alle Eigentümer.",
+"5-0":"Das Finanzamt besteuert nicht deine Mieteinnahmen, sondern den Überschuss nach allen Kosten, die mit der Vermietung zusammenhängen. Diese Kosten heißen Werbungskosten. Je mehr du davon belegen kannst, desto weniger Steuern zahlst du.",
+"5-1":"Ein Haus besteht steuerlich aus zwei Teilen: dem Boden, der sich nie abnutzt, und dem Gebäude, das mit der Zeit an Wert verliert. Nur das Gebäude darfst du abschreiben. Deshalb lohnt es sich, den Gebäudeanteil im Kaufvertrag festzuhalten.",
+"5-2":"AfA heißt Absetzung für Abnutzung. Du ziehst jedes Jahr einen festen Teil des Gebäudepreises von den Mieteinnahmen ab, obwohl dabei kein Geld fließt. Das senkt die Steuer, ohne dass du etwas bezahlen musst.",
+"5-3":"Reparaturen sind normalerweise sofort als Werbungskosten abziehbar. Sanierst du aber kurz nach dem Kauf sehr viel, behandelt das Finanzamt das wie einen Teil des Kaufpreises. Dann gibt es nur die langsame AfA statt sofortiger Steuerersparnis.",
+"5-4":"Bringt ein Haus in einem Jahr weniger ein, als es kostet, entsteht ein Verlust. Er wird mit deinem Gehalt verrechnet und senkt so deine Steuer. Hast du kein anderes Einkommen, wird er gespeichert und später genutzt.",
+"5-5":"Für Denkmäler und Häuser in förmlichen Sanierungsgebieten gibt es eine Sonderabschreibung: Die Sanierungskosten sind in 12 Jahren komplett abgeschrieben statt in 50. Das ist einer der stärksten Steuervorteile bei Immobilien.",
+"5-6":"Eine GmbH zahlt auf ihren Gewinn deutlich weniger Steuern als du privat bei hohem Einkommen. Das lohnt sich, wenn die Gewinne in der Firma bleiben und in neue Häuser fließen. Holst du das Geld privat heraus, fällt noch einmal Steuer an.",
+"5-7":"Normalerweise versteuerst du Einnahmen im Jahr, in dem sie fließen. Bei sehr langen Vorauszahlungen würde das in einem einzigen Jahr einen extrem hohen Steuersatz auslösen. Deshalb darfst du sie auf die Jahre verteilen, für die sie gezahlt werden.",
+"6-0":"Der U-Wert sagt, wie viel Wärme durch einen Quadratmeter eines Bauteils geht, wenn es innen ein Grad wärmer ist als außen. Ein kleiner Wert heißt gute Dämmung. Damit kannst du vergleichen, wie stark eine Sanierung die Heizkosten senkt.",
+"6-1":"Der Energieausweis zeigt, wie viel Energie ein Haus pro Quadratmeter und Jahr braucht. Mal Wohnfläche und Preis pro kWh ergibt eine grobe Schätzung der Heizkosten. Ein hoher Wert ist ein Hinweis auf Sanierungsbedarf.",
+"6-2":"Das Gesetz schreibt bei bestehenden Häusern manche Dämmung vor, zum Beispiel an der obersten Geschossdecke zum kalten Dachboden. Erneuerst du ein Bauteil ohnehin, muss es danach einen Mindeststandard erfüllen.",
+"6-3":"Neue Gas- und Ölheizungen sind erlaubt, müssen aber ab 2029 einen wachsenden Teil der Wärme aus klimafreundlicheren Brennstoffen erzeugen. Diese Brennstoffe sind teurer. Deshalb steigen die Kosten solcher Anlagen auf Dauer.",
+"6-4":"Viele alte Heizungen laufen mit falschen Einstellungen und verschwenden Energie. Deshalb müssen sie in größeren Häusern geprüft und optimiert werden. Das kostet wenig und spart oft spürbar Energie.",
+"6-5":"Ohne Abgleich fließt das Heizwasser den einfachsten Weg: Heizkörper nahe am Kessel werden heiß, ferne bleiben kalt. Ein Fachmann stellt die Ventile so ein, dass jeder Raum genug bekommt. Danach reicht eine niedrigere Vorlauftemperatur.",
+"6-6":"Durch Ritzen und Fugen geht Wärme verloren, und feuchte Luft kann im Bauteil zu Schimmel führen. Der Blower-Door-Test misst, wie dicht die Gebäudehülle ist. Eine Wärmebildkamera zeigt, wo die Wärme austritt.",
+"6-7":"Ältere Häuser enthalten oft Stoffe, die heute verboten sind, vor allem Asbest. Solange nichts beschädigt wird, ist das meist ungefährlich. Beim Bohren, Schleifen oder Abreißen werden aber Fasern frei, deshalb wird vorher geprüft.",
+"7-0":"Gute Investoren prüfen viele Angebote schnell und sortieren die meisten aus. Die Schnellprüfung ist ein fester Fragenkatalog dafür. Nur was sie besteht, bekommt eine genaue Prüfung mit Besichtigung.",
+"7-1":"Rendite ist der Lohn für Risiko. Wo die Rendite auffällig hoch ist, steckt fast immer ein Grund dahinter, den der Markt schon eingepreist hat. Deine Aufgabe ist herauszufinden, ob du dieses Problem besser lösen kannst als andere.",
+"7-2":"Beim Verkäuferdarlehen zahlt der Käufer einen Teil des Kaufpreises später, der Verkäufer wird also ein Stück weit zur Bank. Das senkt das Eigenkapital, das du brauchst. Im Grundbuch steht die Bank aber vor dem Verkäufer.",
+"7-3":"Off-Market heißt: Das Haus wird nicht öffentlich angeboten. Solche Angebote bekommen nur Leute, die bekannt und verlässlich sind. Dafür gibt es weniger Konkurrenz und bessere Preise.",
+"7-4":"Ein Mehrfamilienhaus verteilt dein Risiko auf viele Mieter: Fällt einer aus, zahlen die anderen weiter. Außerdem gehört dir das ganze Haus, und du entscheidest allein, statt mit anderen Eigentümern abzustimmen.",
+"7-5":"Als Vermittler verdienst du, ohne selbst zu kaufen. Du brauchst Kontakte zu Verkäufern und Käufern und eine Gewerbeerlaubnis. Für den Einstieg ins Immobiliengeschäft ist das ein Weg ganz ohne Eigenkapital.",
+"7-6":"Zu mehreren kaufen bringt mehr Eigenkapital und Bonität, macht dich aber von deinen Partnern abhängig. Ein guter Vertrag klärt vorher, was in schwierigen Situationen passiert, solange sich noch alle gut verstehen.",
+"7-7":"Viele Immobilienkurse kosten mehrere tausend Euro. Fernkurse mit Lernkontrolle brauchen eine staatliche Zulassung. Fehlt sie, kann der Vertrag unwirksam sein, und du bekommst dein Geld eventuell zurück.",
+"7-8":"Gemeldete Deals sind gutes Übungsmaterial: Rechne Faktor und Rendite selbst nach, statt den Zahlen zu glauben. So merkst du schnell, ob ein Deal wirklich gut ist oder nur gut klingt."};
+let B_RE=null,B_FORM=null;
+function verlinken(t,gesehen){
+ if(!B_RE){const formen=[];BEGRIFFE.forEach((b,i)=>[b[0],...(b[1]?b[1].split("|"):[])].forEach(f=>formen.push([f,i])));formen.sort((a,b)=>b[0].length-a[0].length);
+  B_FORM=new Map(formen.map(([f,i])=>[f.toLowerCase(),i]));
+  B_RE=new RegExp("(?<![A-Za-zÄÖÜäöüß-])("+formen.map(f=>f[0].replace(/[.*+?^${}()|[\]\\]/g,"\\$&")).join("|")+")(?![A-Za-zÄÖÜäöüß])","gi")}
+ return String(t).replace(B_RE,m=>{const i=B_FORM.get(m.toLowerCase());if(i===undefined||gesehen.has(i))return m;gesehen.add(i);return`<button class="begriff" data-b="${i}">${m}</button>`});
+}
+function zeigeBegriff(i){
+ let el=document.getElementById("begriffpop");
+ if(!el){el=document.createElement("div");el.id="begriffpop";el.className="begriff-pop";el.setAttribute("role","dialog");document.body.appendChild(el)}
+ const b=BEGRIFFE[i];el.innerHTML=`<div><div class="kopfzeile"><b>📖 ${b[0]}</b><button onclick="document.getElementById('begriffpop').hidden=true">✕ Schließen</button></div><p style="margin:8px 0 0">${b[2]}</p>${b[1]?`<p class="klein" style="margin:6px 0 0">Auch: ${b[1].split("|").join(", ")}</p>`:""}</div>`;el.hidden=false;
+}
+document.addEventListener("click",e=>{const b=e.target.closest(".begriff,.begriff-chip");if(b)zeigeBegriff(+b.dataset.b)});
+document.addEventListener("keydown",e=>{const el=document.getElementById("begriffpop");if(e.key==="Escape"&&el&&!el.hidden)el.hidden=true});
+function lexikon(filter=""){
+ ansicht="lexikon";rechnerZu();runde=null;
+ const f=filter.trim().toLowerCase(),liste=BEGRIFFE.map((b,i)=>[b,i]).filter(([b])=>!f||(b[0]+" "+b[1]+" "+b[2]).toLowerCase().includes(f)).sort((a,b)=>a[0][0].localeCompare(b[0][0],"de"));
+ app.innerHTML=`<div class="kopf"><button onclick="start()">← Übersicht</button><span class="chip">📖 ${BEGRIFFE.length} Fachbegriffe</span></div>
+ <div class="karte"><h2 style="margin-top:0">📖 Lexikon</h2><div class="reihe"><input class="breit" id="lexsuche" placeholder="Begriff suchen …" value="${esc(filter)}" aria-label="Begriff suchen" autocomplete="off"></div>
+ <div id="lexliste">${liste.map(([b])=>`<div class="lex"><b>${b[0]}${b[1]?` <span class="klein">(${b[1].split("|").join(", ")})</span>`:""}</b>${b[2]}</div>`).join("")||`<p class="klein">Nichts gefunden.</p>`}</div></div>`;
+ const s=document.getElementById("lexsuche");s.oninput=()=>{const pos=s.selectionStart;lexikon(s.value);const n=document.getElementById("lexsuche");n.focus();n.setSelectionRange(pos,pos)};
 }
 
 /* ---------- Fallstudien: große Aufgaben mit Bild, Schritte bauen aufeinander auf ---------- */
